@@ -1,8 +1,12 @@
 "use client";
+import { useRouter } from 'next/navigation';
 
 const DeliveryOptions = () => {
+  const router = useRouter();
+
   const handleOptionClick = (option) => {
-    alert(`${option} clicked!`)
+    const type = option.toLowerCase().replace(/\s+/g, '-');
+    router.push(`/cek-ongkir?type=${type}`);
   }
 
   const options = [
@@ -42,7 +46,10 @@ const DeliveryOptions = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full max-w-7xl">
         {options.map((option, index) => (
-          <div key={index} className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative hover:shadow-xl transition-shadow">
+          <div 
+            key={index} 
+            className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative hover:shadow-xl transition-shadow cursor-pointer" 
+            onClick={() => handleOptionClick(option.name)}>
             {/* Heart icon in top right */}
             <div className="absolute top-4 right-4 bg-green-500 p-3 rounded-2xl">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">

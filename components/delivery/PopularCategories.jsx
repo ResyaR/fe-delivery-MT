@@ -8,6 +8,8 @@ const PopularCategories = () => {
   const handleCategoryClick = (category) => {
     if (category === "Makanan & Minuman") {
       router.push('/food')
+    } else if (category === "Kirim Barang") {
+      router.push('/cek-ongkir?type=pengiriman-instan')
     } else {
       alert(`${category} clicked!`)
     }
