@@ -7,8 +7,7 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: 'Delivery App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  description: 'FE DELIVERY MT'
 }
 
 export default function RootLayout({
