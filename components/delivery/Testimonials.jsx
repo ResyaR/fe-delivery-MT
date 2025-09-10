@@ -1,6 +1,6 @@
 "use client"
 
-export default function TestimonialSection() {
+const Testimonials = () => {
   return (
     <div className="relative flex flex-col items-center self-stretch px-4 md:px-8 lg:px-16 xl:px-32 mb-16 md:mb-24 overflow-visible">
       {/* Extra space before testimonials */}
@@ -41,7 +41,7 @@ export default function TestimonialSection() {
               }}
             ></div>
             
-            {/* Green rounded rectangle image for M. Zaky */}
+            {/* Green rounded rectangle image for M. Zaky - positioned to fit properly */}
             <img
               src="/green-rounded-rectangle.png"
               alt="M. Zaky"
@@ -54,7 +54,7 @@ export default function TestimonialSection() {
               }}
             />
             
-            {/* Abstract shapes */}
+            {/* Abstract shapes around customer */}
             <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
               <span className="text-white text-sm">😊</span>
             </div>
@@ -65,6 +65,7 @@ export default function TestimonialSection() {
           </div>
           
           <div className="text-center lg:text-left">
+            {/* M. Zaky image instead of text */}
             <img
               src="/mzaky-pengusaha-makanan.png"
               alt="M. Zaky Pengusaha Makanan"
@@ -80,6 +81,7 @@ export default function TestimonialSection() {
               }}
             />
             
+            {/* M. Zaky text with specified styling */}
             <div
               className="absolute"
               style={{
@@ -138,3 +140,5 @@ export default function TestimonialSection() {
     </div>
   )
 }
+
+export default Testimonials

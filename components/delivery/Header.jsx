@@ -62,9 +62,9 @@ export default function Header({ onLogoClick, onSignInClick }) {
         {/* Right side - Sign In button */}
         <button 
           onClick={handleSignIn}
-          className="flex flex-col items-start bg-[url('https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/cjn2hr5n_expires_30_days.png')] bg-cover bg-center w-[140px] sm:w-[160px] md:w-[179px] h-[45px] sm:h-[50px] md:h-[60px] py-3 sm:py-4 px-[35px] sm:px-[45px] md:px-[50px] cursor-pointer hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center bg-[url('https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/cjn2hr5n_expires_30_days.png')] bg-cover bg-center w-[100px] sm:w-[120px] md:w-[140px] h-[35px] sm:h-[40px] md:h-[45px] py-2 px-4 cursor-pointer hover:opacity-90 transition-opacity rounded-lg"
         >
-          <span className="text-[#272727] text-[18px] sm:text-[22px] md:text-[25px] font-bold">
+          <span className="text-[#272727] text-sm sm:text-base md:text-lg font-bold whitespace-nowrap">
             {"Sign In"}
           </span>
         </button>
