@@ -54,7 +54,7 @@ export default function SignInPage() {
             </span>
           </div>
           <span className="text-neutral-600 text-base mb-6 mx-3.5">
-            How to i get started lorem ipsum dolor at?
+            How do I get started with this service?
           </span>
           
           {/* Username Input */}
