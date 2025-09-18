@@ -2,15 +2,35 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { login, setToken, getCurrentUser } from "@/lib/auth";
+import { useAuth } from "@/lib/authContext";
 
 export default function SignInPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const { setUser } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Handle login logic here
-    console.log("Login Now clicked!");
+  const handleLogin = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      await login(email, password);
+      const userResponse = await getCurrentUser();
+      if (userResponse) {
+        setUser(userResponse);
+        router.push("/");
+      } else {
+        setError("Failed to get user profile");
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err instanceof Error ? err.message : "Failed to sign in");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleGoogleLogin = () => {
@@ -57,18 +77,18 @@ export default function SignInPage() {
             How do I get started with this service?
           </span>
           
-          {/* Username Input */}
+          {/* Email Input */}
           <div className="flex items-center bg-[#EFEDFFCC] py-3.5 px-[18px] mb-[18px] gap-1.5 rounded-2xl w-full max-w-[300px]">
             <img
               src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/a2vl56z8_expires_30_days.png" 
               className="w-6 h-6 object-fill"
-              alt="Username icon"
+              alt="Email icon"
             />
             <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="text-[#1C1C1C] bg-transparent text-xs flex-1 py-[3px] border-0 outline-none"
             />
           </div>
@@ -89,14 +109,22 @@ export default function SignInPage() {
             />
           </div>
           
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 w-full max-w-[300px]" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
           {/* Login Button */}
           <button 
-            className="flex flex-col items-start text-left py-[17px] px-[30px] mb-6 mx-[60px] sm:mx-[100px] md:mx-[120px] rounded-2xl border-0 cursor-pointer hover:opacity-90 transition-opacity"
+            className={`flex flex-col items-start text-left py-[17px] px-[30px] mb-6 mx-[60px] sm:mx-[100px] md:mx-[120px] rounded-2xl border-0 cursor-pointer hover:opacity-90 transition-opacity ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{background: "linear-gradient(180deg, #9181F4, #5038ED)"}}
             onClick={handleLogin}
+            disabled={loading}
           >
             <span className="text-white text-xs font-bold">
-              Login Now
+              {loading ? "Signing in..." : "Login Now"}
             </span>
           </button>
           

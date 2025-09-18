@@ -27,7 +27,7 @@ export default function FoodPage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="flex flex-col min-h-screen bg-background"
+      className="flex flex-col min-h-screen bg-background overflow-x-hidden w-full"
     >
       <motion.div
         initial={{ opacity: 0, y: -20 }}

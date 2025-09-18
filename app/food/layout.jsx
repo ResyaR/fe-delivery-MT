@@ -4,5 +4,9 @@ export const metadata = {
 };
 
 export default function FoodLayout({ children }) {
-  return <>{children}</>;
+  return (
+    <div className="overflow-x-hidden w-full">
+      {children}
+    </div>
+  );
 }
