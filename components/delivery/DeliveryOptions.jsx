@@ -1,10 +1,17 @@
 "use client";
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/authContext';
 
 const DeliveryOptions = () => {
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleOptionClick = (option) => {
+    if (!user) {
+      router.push('/signin');
+      return;
+    }
+    
     const type = option.toLowerCase().replace(/\s+/g, '-');
     router.push(`/cek-ongkir?type=${type}`);
   }

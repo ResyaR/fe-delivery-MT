@@ -1,11 +1,18 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/authContext'
 
 const PopularCategories = () => {
   const router = useRouter()
+  const { user } = useAuth()
 
   const handleCategoryClick = (category) => {
+    if (!user) {
+      router.push('/signin')
+      return
+    }
+
     if (category === "Makanan & Minuman") {
       router.push('/food')
     } else if (category === "Kirim Barang") {

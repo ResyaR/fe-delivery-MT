@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/authContext";
 import Header from "../components/delivery/Header";
 import Hero from "../components/delivery/Hero";
 import PopularCategories from "../components/delivery/PopularCategories";

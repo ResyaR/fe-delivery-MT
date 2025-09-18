@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/authContext";
+import UserMenu from "../main/UserMenu";
 
 export default function Header({ onLogoClick, onSignInClick }) {
+  const { user } = useAuth();
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -146,15 +149,20 @@ export default function Header({ onLogoClick, onSignInClick }) {
             </button>
           </div>
 
-          {/* Right side - Sign In button */}
-          <button 
-            onClick={handleSignIn}
-            className="flex items-center justify-center bg-[url('https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/cjn2hr5n_expires_30_days.png')] bg-cover bg-center w-[100px] sm:w-[120px] md:w-[140px] h-[35px] sm:h-[40px] md:h-[45px] py-2 px-4 cursor-pointer hover:opacity-90 transition-opacity rounded-lg"
-          >
-            <span className="text-[#272727] text-sm sm:text-base md:text-lg font-bold whitespace-nowrap">
-              Sign In
-            </span>
-          </button>
+          {/* Right side - Sign In button or User Menu */}
+          <div className="flex items-center">
+            <UserMenu />
+            {!user && (
+              <button 
+                onClick={handleSignIn}
+                className="flex items-center justify-center bg-[url('https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/cjn2hr5n_expires_30_days.png')] bg-cover bg-center w-[100px] sm:w-[120px] md:w-[140px] h-[35px] sm:h-[40px] md:h-[45px] py-2 px-4 cursor-pointer hover:opacity-90 transition-opacity rounded-lg"
+              >
+                <span className="text-[#272727] text-sm sm:text-base md:text-lg font-bold whitespace-nowrap">
+                  Sign In
+                </span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Logo */}

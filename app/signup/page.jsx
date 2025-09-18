@@ -2,16 +2,27 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signup } from "@/lib/auth";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = () => {
-    // Handle sign up logic here
-    console.log("Sign Up clicked!");
-  }
+  const handleSignUp = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      await signup(email, password);
+      router.push("/signin");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create account");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleSignUp = () => {
     // Handle Google sign up logic here
@@ -33,6 +44,11 @@ export default function SignUpPage() {
 
   return (
     <div className="bg-white">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-auto mt-4 max-w-[300px]" role="alert">
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-10">
         <button 
@@ -66,10 +82,10 @@ export default function SignUpPage() {
                 alt="Username icon"
               />
               <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="text-[#1C1C1C] bg-transparent text-xs flex-1 py-[3px] border-0 outline-none"
               />
             </div>
@@ -92,12 +108,13 @@ export default function SignUpPage() {
             
             {/* Sign Up Button */}
             <button 
-              className="flex flex-col items-start text-left py-[17px] px-[30px] sm:px-[35px] md:px-[41px] mb-6 mx-[60px] sm:mx-[100px] md:mx-[120px] rounded-2xl border-0 cursor-pointer hover:opacity-90 transition-opacity"
+              className={`flex flex-col items-start text-left py-[17px] px-[30px] sm:px-[35px] md:px-[41px] mb-6 mx-[60px] sm:mx-[100px] md:mx-[120px] rounded-2xl border-0 cursor-pointer hover:opacity-90 transition-opacity ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               style={{background: "linear-gradient(180deg, #9181F4, #5038ED)"}}
               onClick={handleSignUp}
+              disabled={loading}
             >
               <span className="text-white text-xs font-bold">
-                Sign Up
+                {loading ? "Signing up..." : "Sign Up"}
               </span>
             </button>
             
