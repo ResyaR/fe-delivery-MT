@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/authContext';
-import { removeToken } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 export default function UserMenu() {
@@ -8,9 +8,14 @@ export default function UserMenu() {
   const router = useRouter();
   const [isUserOpen, setIsUserOpen] = useState(false);
 
-  const handleLogout = () => {
-    removeToken();
-    setUser(null);
+  const { logout: authLogout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await authLogout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   if (!user) return null;
