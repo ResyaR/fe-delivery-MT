@@ -48,11 +48,15 @@ export default function HomePage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen bg-gradient-to-b from-[#C3CFE2] to-[#FCFCFC] overflow-x-hidden"
-      style={{
-        background: "linear-gradient(180deg, #C3CFE2 0%, #FCFCFC 100%)"
-      }}
+      className="relative min-h-screen overflow-x-hidden"
     >
+      {/* Hero Background */}
+      <div 
+        className="absolute top-0 left-0 w-full h-[100vh] bg-gradient-to-b from-[#C3CFE2] to-[#FCFCFC] z-0"
+        style={{
+          background: "linear-gradient(180deg, #C3CFE2 0%, #FCFCFC 100%)"
+        }}
+      />
       <motion.header variants={itemVariants}>
         <Header onLogoClick={handleLogoClick} onSignInClick={handleSignInClick} />
       </motion.header>
@@ -63,7 +67,7 @@ export default function HomePage() {
 
       <motion.main 
         variants={itemVariants} 
-        className="bg-white w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8"
+        className="relative z-10 bg-white w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8"
       >
         <motion.div
           initial={{ opacity: 0, y: 50 }}

@@ -9,7 +9,15 @@ export default function AuthLayout({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // List of public paths that don't require authentication
+    const publicPaths = ['/signin', '/signup', '/verify'];
+    const currentPath = window.location.pathname;
+    
+    // Check if current path is a public path
+    const isPublicPath = publicPaths.some(path => currentPath.startsWith(path));
+    
+    if (!loading && !user && !isPublicPath) {
+      console.log('Redirecting to signin from protected route');
       router.push("/signin");
     }
   }, [user, loading, router]);
