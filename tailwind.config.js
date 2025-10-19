@@ -9,6 +9,7 @@ module.exports = {
     extend: {
       fontFamily: {
         system: ["system-ui", "sans-serif"],
+        display: ["Inter"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -16,10 +17,16 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
+        primary: "#e00000",
+        "background-light": "#ffffff",
+        "background-dark": "#1a1a1a",
+        "foreground-light": "#111827",
+        "foreground-dark": "#f9fafb",
+        "card-light": "#f5f5f5",
+        "card-dark": "#2d2d2d",
+        "subtle-light": "#6b7280",
+        "subtle-dark": "#9ca3af",
+        secondary: "#6C63FF",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -46,9 +53,10 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "1.5rem",
+        xl: "2rem",
+        full: "9999px",
+        DEFAULT: "1rem",
       },
     },
   },

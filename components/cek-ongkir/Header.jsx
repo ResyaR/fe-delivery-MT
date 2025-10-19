@@ -38,9 +38,9 @@ export default function Header() {
   return (
     <div className="flex flex-col items-center relative mb-[72px]">
       <img
-        src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/k11a8ywd_expires_30_days.png"
-        className="w-[194px] h-[155px] object-fill relative z-10 cursor-pointer"
-        alt="Logo"
+        src="/logo.png"
+        className="w-[194px] h-[155px] object-contain relative z-10 cursor-pointer"
+        alt="MT Trans Logo"
         onClick={() => router.push('/')}
       />
       <div className="flex flex-col items-start bg-[url('https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/au8nqyjp_expires_30_days.png')] bg-cover bg-center w-[1448px] absolute top-0 left-0 z-0">

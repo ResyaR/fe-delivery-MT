@@ -11,77 +11,78 @@ export default function ServicesSection() {
             memastikan setiap kiriman sampai tepat waktu.
           </span>
         </div>
-        <div className="flex flex-col shrink-0 items-start gap-4 lg:gap-7">
-          {/* Top row */}
-          <div className="flex flex-col sm:flex-row items-start gap-4 lg:gap-[22px]">
-            <button
-              className="flex flex-col items-start bg-white text-left py-4 lg:py-5 rounded-[30px] border-0 w-full sm:w-auto transition-transform duration-300 hover:scale-105"
-              style={{
-                boxShadow: "7px 12px 43px #00000024",
-              }}
-              onClick={() => alert("Pressed!")}
-            >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-5 w-full max-w-4xl">
+          <div
+            className="flex flex-col items-center justify-between bg-white py-5 lg:py-6 px-4 lg:px-5 rounded-[24px] w-full h-[240px] lg:h-[280px]"
+            style={{
+              boxShadow: "7px 12px 43px #00000024",
+            }}
+          >
+            <div className="flex flex-col items-center">
               <img
-                src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/xcatdimx_expires_30_days.png"
-                className="w-16 h-16 lg:w-[104px] lg:h-[104px] mb-4 lg:mb-[17px] ml-8 lg:ml-[78px] object-fill"
+                src="/aman.png"
+                className="w-16 h-16 lg:w-20 lg:h-20 object-fill mb-3"
+                alt="Aman"
               />
-              <span className="text-[#5FE26C] text-xl lg:text-2xl font-bold mb-2 lg:mb-3 ml-8 lg:ml-[92px]">Aman</span>
-              <span className="text-[#90BD94] text-base lg:text-xl font-bold text-center w-full max-w-[235px] ml-3">
-                Nikmati layanan pengantaran yang cepat, aman, dan terpercaya.
-              </span>
-            </button>
-            <div
-              className="flex flex-col items-start bg-white pt-8 lg:pt-[45px] pb-8 lg:pb-[62px] rounded-[30px] w-full sm:w-auto"
-              style={{
-                boxShadow: "7px 12px 43px #00000024",
-              }}
-            >
-              <img
-                src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/mxo6u29c_expires_30_days.png"
-                className="w-12 h-12 lg:w-16 lg:h-16 mb-6 lg:mb-8 ml-8 lg:ml-[79px] object-fill"
-              />
-              <span className="text-[#5FE26C] text-xl lg:text-2xl font-bold mb-4 lg:mb-[17px] mx-4 lg:mx-[46px]">Fast delivery</span>
-              <span className="text-[#90BD94] text-base lg:text-xl font-bold text-center w-full max-w-56 ml-4 lg:ml-5">
-                Pesanan Anda, sampai cepat di depan pintu.
-              </span>
+              <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Aman</span>
             </div>
+            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+              Nikmati layanan pengantaran yang cepat, aman, dan terpercaya.
+            </span>
           </div>
-          {/* Bottom row */}
-          <div className="flex flex-col sm:flex-row items-end gap-4 lg:gap-[22px]">
-            <div
-              className="flex flex-col items-center bg-white py-6 lg:py-[34px] px-4 lg:px-5 gap-4 lg:gap-[23px] rounded-[30px] w-full sm:w-auto"
-              style={{
-                boxShadow: "7px 12px 43px #00000024",
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <img
-                  src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/vuwtrqn3_expires_30_days.png"
-                  className="w-20 h-20 lg:w-[115px] lg:h-[115px] object-fill"
-                />
-                <span className="text-[#5FE26C] text-xl lg:text-2xl font-bold">lokal</span>
-              </div>
-              <span className="text-[#90BD94] text-base lg:text-xl font-bold text-center w-full max-w-[228px]">
-                Kemudahan untuk anda menebarkan kebahagian bagi sekitar
-              </span>
+          <div
+            className="flex flex-col items-center justify-between bg-white py-5 lg:py-6 px-4 lg:px-5 rounded-[24px] w-full h-[240px] lg:h-[280px]"
+            style={{
+              boxShadow: "7px 12px 43px #00000024",
+            }}
+          >
+            <div className="flex flex-col items-center">
+              <img
+                src="/fast.png"
+                className="w-16 h-16 lg:w-20 lg:h-20 object-fill mb-3"
+                alt="Fast delivery"
+              />
+              <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Fast delivery</span>
             </div>
-            <div
-              className="flex flex-col items-center bg-white py-6 lg:py-[34px] px-4 lg:px-5 gap-4 lg:gap-[23px] rounded-[30px] w-full sm:w-auto"
-              style={{
-                boxShadow: "7px 12px 43px #00000024",
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <img
-                  src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/aldyiieh_expires_30_days.png"
-                  className="w-20 h-20 lg:w-[115px] lg:h-[115px] object-fill"
-                />
-                <span className="text-[#5FE26C] text-xl lg:text-2xl font-bold">terjangkau</span>
-              </div>
-              <span className="text-[#90BD94] text-base lg:text-xl font-bold text-center w-full max-w-[228px]">
-                Pengantaran ramah kantong, dari kota hingga pelosok desa.
-              </span>
+            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+              Pesanan Anda, sampai cepat di depan pintu.
+            </span>
+          </div>
+          <div
+            className="flex flex-col items-center justify-between bg-white py-5 lg:py-6 px-4 lg:px-5 rounded-[24px] w-full h-[240px] lg:h-[280px]"
+            style={{
+              boxShadow: "7px 12px 43px #00000024",
+            }}
+          >
+            <div className="flex flex-col items-center">
+              <img
+                src="/lokal.png"
+                className="w-16 h-16 lg:w-20 lg:h-20 object-fill mb-3"
+                alt="Lokal"
+              />
+              <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Lokal</span>
             </div>
+            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+              Kemudahan untuk anda menebarkan kebahagian bagi sekitar
+            </span>
+          </div>
+          <div
+            className="flex flex-col items-center justify-between bg-white py-5 lg:py-6 px-4 lg:px-5 rounded-[24px] w-full h-[240px] lg:h-[280px]"
+            style={{
+              boxShadow: "7px 12px 43px #00000024",
+            }}
+          >
+            <div className="flex flex-col items-center">
+              <img
+                src="/terjangkau.png"
+                className="w-16 h-16 lg:w-20 lg:h-20 object-fill mb-3"
+                alt="Terjangkau"
+              />
+              <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Terjangkau</span>
+            </div>
+            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+              Pengantaran ramah kantong, dari kota hingga pelosok desa.
+            </span>
           </div>
         </div>
       </div>
