@@ -13,80 +13,23 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <img
-              src={
-                "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/sb7tt2m9_expires_30_days.png" ||
-                "/placeholder.svg"
-              }
-              className="h-8 sm:h-12 w-auto"
-              alt="Logo"
+              src="/logo.png"
+              className="h-8 sm:h-10 w-auto object-contain"
+              alt="MT Trans Logo"
             />
+            <div className="flex flex-col">
+              <h1 className="text-lg sm:text-xl font-bold text-black">MT TRANS</h1>
+              <span className="text-xs text-black font-medium">YOUR BEST DELIVERY</span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-            <span className="text-[#E46329] text-base lg:text-lg font-bold cursor-pointer hover:text-orange-600 transition-colors">Home</span>
-            
-            {/* Pricing Dropdown */}
-            <div className="relative">
-              <div 
-                className="flex items-center cursor-pointer hover:text-gray-600 transition-colors"
-                onClick={() => setIsPricingOpen(!isPricingOpen)}
-              >
-                <span className="text-[#272727] text-base lg:text-lg font-bold mr-2">Pricing</span>
-                <img
-                  src={
-                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/xt00cx9b_expires_30_days.png" ||
-                    "/placeholder.svg"
-                  }
-                  className="w-3 h-2"
-                  alt="Dropdown"
-                />
-              </div>
-              {isPricingOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
-                  <div className="py-2">
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Basic Plan</a>
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Premium Plan</a>
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Enterprise</a>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Services Dropdown */}
-            <div className="relative">
-              <div 
-                className="flex items-center cursor-pointer hover:text-gray-600 transition-colors"
-                onClick={() => setIsServicesOpen(!isServicesOpen)}
-              >
-                <span className="text-[#272727] text-base lg:text-lg font-bold mr-2">Services</span>
-                <img
-                  src={
-                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/xt00cx9b_expires_30_days.png" ||
-                    "/placeholder.svg"
-                  }
-                  className="w-3 h-2"
-                  alt="Dropdown"
-                />
-              </div>
-              {isServicesOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
-                  <div className="py-2">
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Food Delivery</a>
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Restaurant Partners</a>
-                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Customer Support</a>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <img
-              src="/search-icon.png"
-              className="w-4 h-4 lg:w-5 lg:h-5 cursor-pointer hover:opacity-70 transition-opacity"
-              alt="Search"
-            />
+          <div className="hidden md:flex items-center justify-center space-x-16 flex-1">
+            <span className="text-[#E00000] text-base lg:text-lg font-bold cursor-pointer hover:text-red-700 transition-colors">Home</span>
+            <span className="text-[#272727] text-base lg:text-lg font-bold cursor-pointer hover:text-[#E00000] transition-colors">Pricing</span>
+            <span className="text-[#272727] text-base lg:text-lg font-bold cursor-pointer hover:text-[#E00000] transition-colors">Services</span>
           </div>
 
           {/* Right side - Icons and User */}
@@ -141,13 +84,9 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <a href="#" className="block px-3 py-2 text-[#E46329] font-bold">Home</a>
+              <a href="#" className="block px-3 py-2 text-[#E00000] font-bold">Home</a>
               <a href="#" className="block px-3 py-2 text-[#272727] font-bold">Pricing</a>
               <a href="#" className="block px-3 py-2 text-[#272727] font-bold">Services</a>
-              <div className="flex items-center px-3 py-2">
-                <img src="/search-icon.png" className="w-5 h-5 mr-2" alt="Search" />
-                <span className="text-[#272727] font-bold">Search</span>
-              </div>
             </div>
           </div>
         )}

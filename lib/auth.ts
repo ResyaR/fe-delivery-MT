@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
-const API_URL = 'https://be-mt-trans.vercel.app'; 
+const API_URL = API_BASE_URL; 
 
 export interface LoginResponse {
   access_token: string;

@@ -16,9 +16,13 @@ const PopularCategories = () => {
     if (category === "Makanan & Minuman") {
       router.push('/food')
     } else if (category === "Kirim Barang") {
-      router.push('/cek-ongkir?type=pengiriman-instan')
+      router.push('/cek-ongkir?tab=cek-ongkir')
+    } else if (category === "Titip Belanja") {
+      router.push('/cek-ongkir?tab=multi-drop')
+    } else if (category === "Paket Besar / Ekspedisi Lokal") {
+      router.push('/cek-ongkir?tab=ekspedisi')
     } else {
-      alert(`${category} clicked!`)
+      router.push('/cek-ongkir')
     }
   }
 

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/config";
 import AvatarUpload from "@/components/profile/AvatarUpload";
+import UserMenu from "@/components/main/UserMenu";
 
 export default function ProfilePage() {
   const { user, setUser, loading } = useAuth();
@@ -46,7 +48,7 @@ export default function ProfilePage() {
   const handleAvatarUpload = async (formData) => {
     try {
       setError("");
-      const response = await fetch('https://be-mt-trans.vercel.app/users/profile/avatar', {
+      const response = await fetch(`${API_BASE_URL}/users/profile/avatar`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -98,7 +100,7 @@ export default function ProfilePage() {
         ? formData.phone 
         : `+62${formData.phone.startsWith('0') ? formData.phone.substring(1) : formData.phone}`;
 
-      const response = await fetch('https://be-mt-trans.vercel.app/users/profile', {
+      const response = await fetch(`${API_BASE_URL}/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +137,25 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-gray-100">
+      {/* Header with consistent logo (same as food header) */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+            <svg className="h-8 w-8 text-[var(--brand-red)]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z" fill="currentColor"></path>
+            </svg>
+            <h1 className="text-xl font-extrabold text-gray-900">MT Trans</h1>
+            </div>
+            {user && (
+              <UserMenu />
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {error && (
           <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -272,5 +292,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
