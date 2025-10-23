@@ -113,6 +113,10 @@ dist
 tmp/
 temp/
 
+# Separate repositories (deployed independently)
+backend/
+food-delivery-admin/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
