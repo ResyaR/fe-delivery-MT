@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentUser, User, logout as authLogout, login as authLogin, signup as authSignup } from '../lib/auth';
+import { getCurrentUser, User, logout as authLogout, login as authLogin, signup as authSignup, refreshToken as refreshAuthToken } from '../lib/auth';
+import { getTokenExpiryTime } from '../lib/jwtHelper';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null);
 
   const checkAuth = async () => {
     try {
@@ -99,6 +101,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     checkAuth();
   }, []);
+
+  // Auto-refresh token mechanism
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !user) {
+      // Clear timer jika tidak ada token atau user
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        setRefreshTimer(null);
+      }
+      return;
+    }
+
+    const setupAutoRefresh = () => {
+      const expiryTime = getTokenExpiryTime(token);
+      if (!expiryTime) return;
+
+      const now = Date.now();
+      const timeUntilExpiry = expiryTime - now;
+      
+      // Refresh 2 menit sebelum expire (atau 80% dari waktu expire, whichever is earlier)
+      const refreshTime = Math.max(
+        timeUntilExpiry - (2 * 60 * 1000), // 2 menit sebelum
+        Math.min(timeUntilExpiry * 0.8, timeUntilExpiry - (2 * 60 * 1000)) // 80% waktu atau 2 menit sebelum
+      );
+
+      if (refreshTime > 0) {
+        console.log(`[Auth] Auto-refresh scheduled in ${Math.round(refreshTime / 1000)} seconds`);
+        
+        const timer = setTimeout(async () => {
+          try {
+            console.log('[Auth] Auto-refreshing token...');
+            const newToken = await refreshAuthToken();
+            
+            if (newToken) {
+              console.log('[Auth] Token refreshed successfully');
+              // Token updated, trigger re-setup
+              // The new token will be picked up in next effect run
+            } else {
+              console.error('[Auth] Failed to refresh token');
+              // Token refresh gagal, logout user
+              await handleLogout();
+            }
+          } catch (error) {
+            console.error('[Auth] Auto refresh error:', error);
+            // Jika refresh gagal, logout user
+            await handleLogout();
+          }
+        }, refreshTime);
+
+        setRefreshTimer(timer);
+      } else if (timeUntilExpiry > 0) {
+        // Token akan expire segera, refresh sekarang
+        console.log('[Auth] Token expiring soon, attempting refresh now');
+        refreshAuthToken().catch(() => handleLogout());
+      }
+    };
+
+    setupAutoRefresh();
+
+    // Cleanup timer saat component unmount atau dependencies berubah
+    return () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+    };
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ 

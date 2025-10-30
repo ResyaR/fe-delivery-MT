@@ -22,6 +22,16 @@ export default function UserMenu() {
     setIsUserOpen(false);
   };
 
+  const handleDeliveriesClick = () => {
+    router.push('/deliveries');
+    setIsUserOpen(false);
+  };
+
+  const handleOrdersClick = () => {
+    router.push('/orders');
+    setIsUserOpen(false);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -94,10 +104,26 @@ export default function UserMenu() {
                   </svg>
                   <span>Profile</span>
                 </button>
+
+                <button 
+                  onClick={handleOrdersClick}
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                >
+                  <span className="material-symbols-outlined text-base">restaurant</span>
+                  <span>Pesanan Makanan</span>
+                </button>
+
+                <button 
+                  onClick={handleDeliveriesClick}
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                >
+                  <span className="material-symbols-outlined text-base">local_shipping</span>
+                  <span>Riwayat Pengiriman</span>
+                </button>
                 
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-3"
+                  className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-3 border-t border-gray-100"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

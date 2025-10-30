@@ -6,25 +6,21 @@ export default function MTTransFoodHero() {
   const router = useRouter();
 
   const handleOrderNow = () => {
-    // Scroll to food partners section
-    const foodPartnersSection = document.getElementById('food-partners');
-    if (foodPartnersSection) {
-      foodPartnersSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    router.push('/food/all'); // Direct to all restaurants
   };
 
   return (
-    <section className="grid md:grid-cols-2 gap-12 items-center">
-      <div className="space-y-6 text-center md:text-left">
-        <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+    <section className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+      <div className="space-y-4 md:space-y-6 text-center md:text-left">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
           Apa Kata Mereka Tentang Layanan Food Delivery Kami?
         </h1>
-        <p className="text-xl text-subtle-light dark:text-subtle-dark">
+        <p className="text-base md:text-xl text-gray-600">
           Cepat, hangat, dan aman sampai ke pelanggan.
         </p>
         <button 
           onClick={handleOrderNow}
-          className="bg-primary text-white font-bold text-lg rounded-full px-8 py-4 shadow-lg hover:bg-red-700 transition-all transform hover:scale-105 hover:shadow-xl"
+          className="bg-[#E00000] text-white font-bold text-base md:text-lg rounded-full px-6 md:px-8 py-3 md:py-4 shadow-lg hover:bg-red-700 transition-all transform hover:scale-105 hover:shadow-xl"
         >
           Pesan Sekarang
         </button>

@@ -29,42 +29,33 @@ export default function MTTransHero() {
     <section className="relative bg-[#E00000] fade-in" style={{paddingTop: '80px', paddingBottom: '80px'}}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-12">
         <div className="max-w-xl text-center md:text-left">
+          <div className="mb-4">
+            <span className="inline-block px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-full backdrop-blur-sm">
+              🎯 Pesan, Kirim, Sampai - Semua dalam 1 Aplikasi
+            </span>
+          </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
             Pengantaran Mudah & Praktis
           </h1>
           <p className="mt-6 text-lg text-red-100">
-            Biarkan kami mengantarkan kebutuhan Anda dengan cepat dan andal.
+            Biarkan kami mengantarkan kebutuhan Anda dengan cepat dan andal. Dari makanan favorit hingga paket penting, semua dalam satu platform.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <button 
-              onClick={handleKirimBarang}
-              className="flex min-w-[150px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-white text-[#E00000] text-base font-bold leading-normal tracking-[0.015em] hover:bg-gray-200 transition-colors"
-            >
-              <span className="truncate">Kirim Barang</span>
-            </button>
-            <button 
-              onClick={handlePengirimanInstan}
-              className="flex min-w-[150px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-transparent border-2 border-white text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-white hover:text-[#E00000] transition-colors"
-            >
-              <span className="truncate">Pengiriman Instan</span>
-            </button>
-          </div>
-          
-          {/* Additional Action Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
-            <button 
               onClick={handleOrderNow}
-              className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/30 transition-colors"
+              className="flex min-w-[180px] max-w-[480px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-14 px-8 bg-white text-[#E00000] text-base font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 transition-all hover:scale-105 shadow-lg"
+              aria-label="Order makanan sekarang"
             >
-              <span className="material-symbols-outlined text-lg">restaurant</span>
-              <span>Order Makanan</span>
+              <span className="material-symbols-outlined">restaurant</span>
+              <span className="truncate">Order Makanan</span>
             </button>
             <button 
-              onClick={handleLearnMore}
-              className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white text-sm font-semibold rounded-lg hover:bg-white/30 transition-colors"
+              onClick={handleKirimBarang}
+              className="flex min-w-[180px] max-w-[480px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-14 px-8 bg-transparent border-2 border-white text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-white hover:text-[#E00000] transition-all"
+              aria-label="Kirim barang sekarang"
             >
-              <span className="material-symbols-outlined text-lg">info</span>
-              <span>Pelajari Lebih</span>
+              <span className="material-symbols-outlined">local_shipping</span>
+              <span className="truncate">Kirim Barang</span>
             </button>
           </div>
           <div className="mt-8 flex justify-center md:justify-start items-center gap-4 text-red-200 font-medium">
@@ -86,7 +77,7 @@ export default function MTTransHero() {
         </div>
         <div className="relative w-full max-w-lg lg:max-w-xl">
           <img 
-            alt="Kurir MT Trans mengantarkan paket" 
+            alt="Kurir MT Trans mengantarkan paket dengan cepat dan aman" 
             className="rounded-2xl shadow-2xl w-full h-auto object-cover" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqYWUoH1Xu7uWcooXW8ZK3Enwoky-EixqDWdl66PmabpuXNT6eI4oNhk-BwiAXqm97Qwz1jJEppH4ybTLW1CUjcIRV_mOf7hikGyGTb9-ZH2wqZF8tUrsvBfEiPaOIMNFKlkhcID_JNEFIcrsh96-SbYkK8octlhmP_ffWwWoGsxgzn1CMKF7vhekM9DHr5QhnDgXA_z0WJg7WrTz7t_3ya3FUGuQvp6KJhHSi7VtdMldYuhlUE-UpBrzYcfYr4Cn-VkrJX_zGI-U"
           />

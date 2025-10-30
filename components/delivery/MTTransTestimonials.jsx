@@ -4,19 +4,19 @@ export default function MTTransTestimonials() {
   const testimonials = [
     {
       name: "Wulan Sari",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCO3u0Yp-kwu91VEudsVjjoifF1TISU3jn7Ka0LBkooYSDzJ2ebZKxtM4UqZ28HLvSQfZ0aU4pFoL34vR_58PetsRwzt8SDp-Djq3ZOtAIboLTlDFMTT8Vjoz8XB6JqzJQvfv6Vl2hGzW_lYgfvlWya6v4mLV4ftDqywg7WZiJkNIjaNkXutDi8em0zsXT5lrECtwuf4y7z-i7zOz626bR1Bl6RYltuMcfQjjNG7Gve3gmp_a2d4WG_FQ6Fpuk2OTlMHuYgrysCQ5g",
+      avatar: "https://i.pravatar.cc/150?img=5",
       rating: 5,
       comment: "MT Trans adalah andalan saya untuk semua kebutuhan pengiriman. Cepat, andal, dan selalu tepat waktu!"
     },
     {
       name: "Agung Prasetyo",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBdjX_uDfRH91DnZur_qJ9fssGS79CpNaacPs-Y3gvDp-PjH_XzaMeHrKwswSAr6K7NMxl4APtFgf8Lf39x6JTDCTJwJ2NUv3iY-xbrJJQKDMNONt3DTBcqSQkYGKcyMnG9poOZ8iIuTJvHiJw4J0GOiWOxuZHGO3kagky2YpHad-wvv3A1ia2G1toit2DxwpKww1cBcY4QTBj4bT5XAUWFYgYMnuqwRM9OcpuiU-8EFYbGzKlUHn-G2mWvZjJZivaaFwOmdpASJNE",
+      avatar: "https://i.pravatar.cc/150?img=12",
       rating: 5,
       comment: "Layanan hebat dan harga terjangkau. Saya sudah beberapa kali menggunakan jasa mereka dan tidak pernah ada masalah."
     },
     {
       name: "Maya Indira",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCO3u0Yp-kwu91VEudsVjjoifF1TISU3jn7Ka0LBkooYSDzJ2ebZKxtM4UqZ28HLvSQfZ0aU4pFoL34vR_58PetsRwzt8SDp-Djq3ZOtAIboLTlDFMTT8Vjoz8XB6JqzJQvfv6Vl2hGzW_lYgfvlWya6v4mLV4ftDqywg7WZiJkNIjaNkXutDi8em0zsXT5lrECtwuf4y7z-i7zOz626bR1Bl6RYltuMcfQjjNG7Gve3gmp_a2d4WG_FQ6Fpuk2OTlMHuYgrysCQ5g",
+      avatar: "https://i.pravatar.cc/150?img=9",
       rating: 5,
       comment: "Saya suka kemudahan penjadwalan pengiriman. MT Trans membuat hidup saya jauh lebih mudah!"
     }

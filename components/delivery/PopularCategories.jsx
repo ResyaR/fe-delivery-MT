@@ -66,10 +66,11 @@ const PopularCategories = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full max-w-7xl">
         {categories.map((category, index) => (
-        <button
+          <button
             key={index}
             onClick={() => handleCategoryClick(category.name)}
-            className="flex flex-col items-center bg-white text-center p-6 md:p-8 rounded-3xl border-0 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+            className="flex flex-col items-center bg-white text-center p-6 md:p-8 rounded-3xl border-0 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-red-300"
+            aria-label={`${category.name} service`}
           >
             {/* Icon with colored background */}
             <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full ${category.bgColor} flex items-center justify-center mb-4 md:mb-6 overflow-hidden`}>
@@ -92,9 +93,9 @@ const PopularCategories = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-              <span className="text-3xl md:text-4xl">{category.icon}</span>
+                <span className="text-3xl md:text-4xl">{category.icon}</span>
               )}
-        </div>
+            </div>
 
             {/* Category name */}
             <span className="text-[#1E1E1E] text-lg md:text-xl font-bold mb-2">
@@ -105,7 +106,7 @@ const PopularCategories = () => {
             {category.subtitle && (
               <span className="text-[#555555] text-sm md:text-base">
                 {category.subtitle}
-          </span>
+              </span>
             )}
           </button>
         ))}

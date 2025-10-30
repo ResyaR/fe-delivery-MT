@@ -1,46 +1,39 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
+
 export default function MTTransFoodCategories() {
+  const router = useRouter();
+
+  const handleCategoryClick = (categoryName) => {
+    router.push(`/food/all?category=${encodeURIComponent(categoryName)}`);
+  };
+
   const categories = [
     {
       name: "Mie Ayam",
-      icon: (
-        <svg className="text-primary" fill="currentColor" height="60" viewBox="0 0 256 256" width="60" xmlns="http://www.w3.org/2000/svg">
-          <path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104Zm-24.46,0H148.12a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"></path>
-        </svg>
-      )
+      icon: "ramen_dining",
+      color: "text-orange-500"
     },
     {
       name: "Minuman",
-      icon: (
-        <svg className="text-primary" fill="currentColor" height="60" viewBox="0 0 256 256" width="60" xmlns="http://www.w3.org/2000/svg">
-          <path d="M80,56V24a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm40,8a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,120,64Zm32,0a8,8,0,0,0,8-8V24a8,8,0,0,0-16,0V56A8,8,0,0,0,152,64Zm96,56v8a40,40,0,0,1-37.51,39.91,96.59,96.59,0,0,1-27,40.09H208a8,8,0,0,1,0,16H32a8,8,0,0,1,0-16H41a32,32,0,0,0,62,0h50a32,32,0,0,0,62,0h17a16,16,0,0,0,16-16V120A7.94,7.94,0,0,0,247.42,117ZM184,88h34.58l9.6,24H184ZM24,72H168v64H24ZM72,208a16,16,0,1,1,16-16A16,16,0,0,1,72,208Zm81-24H103a32,32,0,0,0-62,0H24V152H168v12.31A32.11,32.11,0,0,0,153,184Zm31,24a16,16,0,1,1,16-16A16,16,0,0,1,184,208Zm48-24H215a32.06,32.06,0,0,0-31-24V128h48Z"></path>
-        </svg>
-      )
+      icon: "local_cafe",
+      color: "text-blue-500"
     },
     {
       name: "Bakso",
-      icon: (
-        <svg className="text-primary" fill="currentColor" height="60" viewBox="0 0 256 256" width="60" xmlns="http://www.w3.org/2000/svg">
-          <path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104Zm-24.46,0H148.12a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"></path>
-        </svg>
-      )
+      icon: "soup_kitchen",
+      color: "text-red-500"
     },
     {
       name: "Korea",
-      icon: (
-        <svg className="text-primary" fill="currentColor" height="60" viewBox="0 0 256 256" width="60" xmlns="http://www.w3.org/2000/svg">
-          <path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104Zm-24.46,0H148.12a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"></path>
-        </svg>
-      )
+      icon: "restaurant",
+      color: "text-purple-500"
     },
     {
       name: "Es Krim",
-      icon: (
-        <svg className="text-primary" fill="currentColor" height="60" viewBox="0 0 256 256" width="60" xmlns="http://www.w3.org/2000/svg">
-          <path d="M208,89.37V88A80,80,0,0,0,48,88v1.37A24,24,0,0,0,56,136h3.36l61.69,108a8,8,0,0,0,13.9,0l61.69-108H200a24,24,0,0,0,8-46.63ZM184,88h34.58l9.6,24H184ZM24,72H168v64H24ZM72,208a16,16,0,1,1,16-16A16,16,0,0,1,72,208Zm81-24H103a32,32,0,0,0-62,0H24V152H168v12.31A32.11,32.11,0,0,0,153,184Zm31,24a16,16,0,1,1,16-16A16,16,0,0,1,184,208Zm48-24H215a32.06,32.06,0,0,0-31-24V128h48Z"></path>
-        </svg>
-      )
+      icon: "icecream",
+      color: "text-pink-500"
     }
   ];
 
@@ -49,12 +42,21 @@ export default function MTTransFoodCategories() {
       <h2 className="text-3xl font-bold text-center mb-8">Aneka Kuliner Menarik</h2>
       <div className="flex justify-center flex-wrap gap-8">
         {categories.map((category, index) => (
-          <a key={index} className="flex flex-col items-center gap-4 group" href="#">
-            <div className="w-32 h-32 rounded-full bg-card-light dark:bg-card-dark flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all">
-              {category.icon}
+          <div 
+            key={index} 
+            onClick={() => handleCategoryClick(category.name)}
+            className="flex flex-col items-center gap-4 group cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label={`Filter by ${category.name}`}
+          >
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all">
+              <span className={`material-symbols-outlined text-5xl md:text-6xl ${category.color}`}>
+                {category.icon}
+              </span>
             </div>
-            <h3 className="text-xl font-bold">{category.name}</h3>
-          </a>
+            <h3 className="text-lg md:text-xl font-bold text-center">{category.name}</h3>
+          </div>
         ))}
       </div>
     </section>

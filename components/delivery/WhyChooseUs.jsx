@@ -1,6 +1,6 @@
 export default function ServicesSection() {
   return (
-    <div className="py-8 lg:py-16">
+    <div id="services" className="py-8 lg:py-16">
       {/* Services Section */}
       <div className="flex flex-col lg:flex-row items-start mb-16 lg:mb-[31px] justify-center gap-8 lg:gap-16">
         <div className="flex flex-col shrink-0 items-start mt-8 lg:mt-[47px] mr-0 lg:mr-[68px] text-center lg:text-left">
@@ -26,7 +26,7 @@ export default function ServicesSection() {
               />
               <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Aman</span>
             </div>
-            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+            <span className="text-gray-600 text-sm lg:text-base font-medium text-center w-full max-w-[200px]">
               Nikmati layanan pengantaran yang cepat, aman, dan terpercaya.
             </span>
           </div>
@@ -44,7 +44,7 @@ export default function ServicesSection() {
               />
               <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Fast delivery</span>
             </div>
-            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+            <span className="text-gray-600 text-sm lg:text-base font-medium text-center w-full max-w-[200px]">
               Pesanan Anda, sampai cepat di depan pintu.
             </span>
           </div>
@@ -62,7 +62,7 @@ export default function ServicesSection() {
               />
               <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Lokal</span>
             </div>
-            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+            <span className="text-gray-600 text-sm lg:text-base font-medium text-center w-full max-w-[200px]">
               Kemudahan untuk anda menebarkan kebahagian bagi sekitar
             </span>
           </div>
@@ -80,7 +80,7 @@ export default function ServicesSection() {
               />
               <span className="text-[#E00000] text-lg lg:text-xl font-bold mb-2">Terjangkau</span>
             </div>
-            <span className="text-[#90BD94] text-sm lg:text-base font-bold text-center w-full max-w-[200px]">
+            <span className="text-gray-600 text-sm lg:text-base font-medium text-center w-full max-w-[200px]">
               Pengantaran ramah kantong, dari kota hingga pelosok desa.
             </span>
           </div>

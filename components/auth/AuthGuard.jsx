@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 
 // Daftar path yang dapat diakses tanpa login
-const PUBLIC_PATHS = ['/', '/signin', '/signup', '/verify'];
+const PUBLIC_PATHS = ['/', '/signin', '/signup', '/verify', '/forgot-password', '/reset-password'];
 
 export default function AuthGuard({ children }) {
   const { user, isLoading, checkAuth } = useAuth();

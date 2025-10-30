@@ -3,8 +3,10 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from "next-themes"
 import { AuthProvider } from '@/lib/authContext'
+import { CartProvider } from '@/lib/cartContext'
 import { ToastProvider } from '@/components/common/ToastProvider'
 import AuthGuard from '@/components/auth/AuthGuard'
+import TokenRefreshIndicator from '@/components/common/TokenRefreshIndicator'
 import "./globals.css"
 
 export const metadata = {
@@ -30,14 +32,17 @@ export default function RootLayout({ children }) {
       <body className={`${GeistSans.className} bg-white min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
-            <ToastProvider>
-              <AuthGuard>
-                <div className="relative min-h-screen bg-white">
-                  {children}
-                  <Analytics />
-                </div>
-              </AuthGuard>
-            </ToastProvider>
+            <CartProvider>
+              <ToastProvider>
+                <AuthGuard>
+                  <div className="relative min-h-screen bg-white">
+                    {children}
+                    <Analytics />
+                    <TokenRefreshIndicator />
+                  </div>
+                </AuthGuard>
+              </ToastProvider>
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

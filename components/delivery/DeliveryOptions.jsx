@@ -62,10 +62,19 @@ const DeliveryOptions = () => {
         {options.map((option, index) => (
           <div 
             key={index} 
-            className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative hover:shadow-xl transition-shadow cursor-pointer" 
-            onClick={() => handleOptionClick(option.name)}>
+            className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative hover:shadow-xl transition-shadow cursor-pointer focus:outline-none focus:ring-4 focus:ring-red-300" 
+            onClick={() => handleOptionClick(option.name)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleOptionClick(option.name);
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label={`Select ${option.name} delivery option`}>
             {/* Heart icon in top right */}
-            <div className="absolute top-4 right-4 bg-[#E00000] p-3 rounded-2xl">
+            <div className="absolute top-4 right-4 bg-[#E00000] p-3 rounded-2xl" aria-hidden="true">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
               </svg>

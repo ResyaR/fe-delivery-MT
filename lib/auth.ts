@@ -200,6 +200,11 @@ export const refreshToken = async (): Promise<string | null> => {
   const refresh_token = localStorage.getItem('refresh_token');
   if (!refresh_token) return null;
 
+  // Dispatch start event
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('token-refresh-start'));
+  }
+
   try {
     const response = await axios.post(`${API_URL}/auth/refresh`, {
       refresh_token
@@ -216,10 +221,21 @@ export const refreshToken = async (): Promise<string | null> => {
     // Update Authorization header for future requests
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
+    // Dispatch success event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('token-refresh-end'));
+    }
+
     return access_token;
   } catch (error) {
     // If refresh fails, clear tokens and return null
     removeToken();
+    
+    // Dispatch error event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('token-refresh-error'));
+    }
+    
     return null;
   }
 };
