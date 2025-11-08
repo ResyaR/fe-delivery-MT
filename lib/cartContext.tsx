@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './authContext';
 
 interface CartItem {
   menuId: number;
@@ -27,23 +28,54 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const { user } = useAuth();
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
 
-  // Load cart from localStorage on mount
+  // Clear cart when user changes (different user logged in)
   useEffect(() => {
+    const currentUserId = user?.email || null;
+    
+    // If user changed (different user logged in), clear cart
+    if (lastUserId !== null && lastUserId !== currentUserId && currentUserId !== null) {
+      console.log('User changed, clearing cart');
+      setCart([]);
+      localStorage.removeItem('foodCart');
+    }
+    
+    // Update last user ID
+    if (currentUserId !== lastUserId) {
+      setLastUserId(currentUserId);
+    }
+  }, [user, lastUserId]);
+
+  // Load cart from localStorage on mount (only if user is logged in)
+  useEffect(() => {
+    if (!user) {
+      // If no user, clear cart
+      setCart([]);
+      return;
+    }
+
     const savedCart = localStorage.getItem('foodCart');
     if (savedCart) {
       try {
         setCart(JSON.parse(savedCart));
       } catch (error) {
         console.error('Error loading cart:', error);
+        localStorage.removeItem('foodCart');
       }
     }
-  }, []);
+  }, [user]);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes (only if user is logged in)
   useEffect(() => {
-    localStorage.setItem('foodCart', JSON.stringify(cart));
-  }, [cart]);
+    if (user && cart.length > 0) {
+      localStorage.setItem('foodCart', JSON.stringify(cart));
+    } else if (!user) {
+      // If user logs out, cart should already be cleared, but ensure it's removed
+      localStorage.removeItem('foodCart');
+    }
+  }, [cart, user]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCart((prevCart) => {

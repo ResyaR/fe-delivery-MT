@@ -45,6 +45,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       await authLogin(email, password);
+      
+      // Clear cart from previous user (if any) before setting new user
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('foodCart');
+      }
+      
       // After successful login, get the current user
       const currentUser = await getCurrentUser();
       setUser(currentUser);
@@ -78,14 +84,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await authLogout();
       setUser(null);
+      
+      // Clear cart data when user logs out
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('foodCart');
         window.location.href = '/signin';  // Force a full page reload
       }
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear user state even if API call fails
       setUser(null);
+      
+      // Clear cart data even if logout API fails
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('foodCart');
         window.location.href = '/signin';
       }
     } finally {

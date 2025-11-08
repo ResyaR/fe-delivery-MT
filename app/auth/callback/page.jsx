@@ -41,6 +41,9 @@ function OAuthCallbackContent() {
           return;
         }
 
+        // Clear cart from previous user (if any) before storing new tokens
+        localStorage.removeItem('foodCart');
+        
         // Store tokens
         localStorage.setItem('token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
