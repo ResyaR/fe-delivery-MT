@@ -70,8 +70,13 @@ export default function CheckoutPage() {
 
       const result = await OrderAPI.createOrder(orderData);
       
-      // Clear cart
-      clearCart();
+      // Clear cart after successful order
+      try {
+        await clearCart();
+      } catch (cartError) {
+        console.error('Error clearing cart:', cartError);
+        // Continue even if cart clear fails
+      }
       
       // Redirect to order success page or order detail
       router.push(`/orders?success=true&orderId=${result.data.id}`);

@@ -105,14 +105,29 @@ export default function CartPage() {
     setPromoSuccess('');
   };
 
-  const handleUpdateQuantity = async (menuId, newQty) => {
+  const handleUpdateQuantity = async (menuId: number, newQty: number) => {
     if (newQty < 1) {
-      removeFromCart(menuId);
+      await handleRemoveFromCart(menuId);
       return;
     }
     setUpdatingItem(menuId);
-    await updateQuantity(menuId, newQty);
-    setTimeout(() => setUpdatingItem(null), 300);
+    try {
+      await updateQuantity(menuId, newQty);
+    } catch (error: any) {
+      console.error('Error updating quantity:', error);
+      alert(error.message || 'Gagal mengupdate jumlah item');
+    } finally {
+      setTimeout(() => setUpdatingItem(null), 300);
+    }
+  };
+
+  const handleRemoveFromCart = async (menuId: number) => {
+    try {
+      await removeFromCart(menuId);
+    } catch (error: any) {
+      console.error('Error removing from cart:', error);
+      alert(error.message || 'Gagal menghapus item dari keranjang');
+    }
   };
 
   const handleSelectAddress = (address) => {
@@ -284,7 +299,7 @@ export default function CartPage() {
                               </button>
                             </div>
                             <button
-                              onClick={() => removeFromCart(item.menuId)}
+                              onClick={() => handleRemoveFromCart(item.menuId)}
                               className="text-red-600 hover:text-red-700 p-2"
                               aria-label={`Remove ${item.menuName} from cart`}
                             >

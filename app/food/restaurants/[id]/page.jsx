@@ -12,7 +12,7 @@ export default function RestaurantDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { addToCart, cart, getRestaurantId } = useCart();
+  const { addToCart, cart, getRestaurantId, clearCart } = useCart();
   
   const [restaurant, setRestaurant] = useState(null);
   const [menus, setMenus] = useState([]);
@@ -20,6 +20,7 @@ export default function RestaurantDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
 
   useEffect(() => {
     loadRestaurantData();
@@ -41,33 +42,51 @@ export default function RestaurantDetailPage() {
     }
   };
 
-  const handleAddToCart = (menu) => {
+  const handleAddToCart = async (menu: any) => {
     if (!user) {
       router.push('/signin');
       return;
     }
 
-    // Check if cart has items from different restaurant
-    const currentRestaurantId = getRestaurantId();
-    if (currentRestaurantId && currentRestaurantId !== restaurant.id) {
-      if (!confirm('Keranjang Anda berisi item dari restaurant lain. Ingin mengganti?')) {
-        return;
+    setIsAddingToCart(menu.id);
+    try {
+      // Check if cart has items from different restaurant
+      const currentRestaurantId = getRestaurantId();
+      if (currentRestaurantId && currentRestaurantId !== restaurant.id) {
+        if (!confirm('Keranjang Anda berisi item dari restaurant lain. Ingin mengganti?')) {
+          setIsAddingToCart(null);
+          return;
+        }
+        // Clear cart first if user wants to replace
+        try {
+          await clearCart();
+        } catch (clearError) {
+          console.error('Error clearing cart:', clearError);
+          // Continue anyway, backend will handle it
+        }
       }
-      // Clear cart will be handled by adding from new restaurant
+
+      await addToCart({
+        menuId: menu.id,
+        menuName: menu.name,
+        price: parseFloat(menu.price),
+        image: menu.image,
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+      });
+
+      setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 2000);
+    } catch (error: any) {
+      console.error('Error adding to cart:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Gagal menambahkan ke keranjang';
+      setNotificationMessage(errorMessage);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    } finally {
+      setIsAddingToCart(null);
     }
-
-    addToCart({
-      menuId: menu.id,
-      menuName: menu.name,
-      price: parseFloat(menu.price),
-      image: menu.image,
-      restaurantId: restaurant.id,
-      restaurantName: restaurant.name,
-    });
-
-    setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 2000);
   };
 
   const categories = ["all", ...new Set(menus.map(menu => menu.category))];
@@ -201,10 +220,20 @@ export default function RestaurantDetailPage() {
                             </p>
                             <button
                               onClick={() => handleAddToCart(menu)}
-                              className="bg-[#E00000] text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-1"
+                              disabled={isAddingToCart === menu.id}
+                              className="bg-[#E00000] text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <span className="material-symbols-outlined text-lg">add_shopping_cart</span>
-                              Tambah
+                              {isAddingToCart === menu.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Menambah...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="material-symbols-outlined text-lg">add_shopping_cart</span>
+                                  Tambah
+                                </>
+                              )}
                             </button>
                           </div>
                         </div>
