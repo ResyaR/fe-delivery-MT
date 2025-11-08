@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { useToast } from '@/components/common/ToastProvider';
 import api from '@/lib/axios';
 
-export default function OAuthCallback() {
+// Force dynamic rendering for OAuth callback page
+export const dynamic = 'force-dynamic';
+
+function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkAuth } = useAuth();
@@ -109,3 +112,17 @@ export default function OAuthCallback() {
   );
 }
 
+export default function OAuthCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E00000] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <OAuthCallbackContent />
+    </Suspense>
+  );
+}
