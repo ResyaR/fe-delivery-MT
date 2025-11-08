@@ -82,9 +82,15 @@ GOOGLE_CLIENT_SECRET=GOCSPX-your-google-client-secret
 GOOGLE_CALLBACK_URL=https://be-mt-trans.vercel.app/auth/google/callback
 BACKEND_URL=https://be-mt-trans.vercel.app
 
-# Frontend URL (untuk redirect setelah OAuth)
+# Frontend URL (untuk redirect setelah OAuth) - ⚠️ PENTING!
+# Ganti dengan URL frontend production Anda (contoh: https://your-app-name.vercel.app)
 FRONTEND_URL=https://your-frontend-domain.vercel.app
 ```
+
+**⚠️ PENTING:** 
+- `FRONTEND_URL` harus diset dengan URL frontend production Anda
+- Jika tidak diset, OAuth callback akan redirect ke `localhost:3000` yang menyebabkan error
+- Contoh: Jika frontend Anda di `https://mt-trans-app.vercel.app`, maka set `FRONTEND_URL=https://mt-trans-app.vercel.app`
 
 ### Development (Local)
 
@@ -161,12 +167,16 @@ FRONTEND_URL=http://localhost:3000
 
 ### Error: "redirect ke localhost padahal di production"
 
-**Penyebab:** Environment variables tidak diset di Vercel atau frontend menggunakan fallback ke localhost.
+**Penyebab:** Environment variable `FRONTEND_URL` tidak diset di Vercel backend, sehingga backend menggunakan default `http://localhost:3000`.
 
 **Solusi:**
-1. Pastikan `NEXT_PUBLIC_API_URL` diset di Vercel (atau gunakan `API_BASE_URL` dari `lib/config.ts`)
-2. Pastikan `BACKEND_URL` dan `FRONTEND_URL` diset di backend Vercel
+1. **PENTING:** Set `FRONTEND_URL` di Vercel backend environment variables dengan URL frontend production Anda
+   - Contoh: `FRONTEND_URL=https://your-app-name.vercel.app`
+   - Jangan gunakan `http://localhost:3000` di production!
+2. Pastikan `BACKEND_URL` diset di backend Vercel
 3. Pastikan `GOOGLE_CALLBACK_URL` menggunakan full URL production
+4. Redeploy backend setelah mengubah environment variables
+5. Cek di Vercel logs apakah ada warning tentang `FRONTEND_URL` tidak diset
 
 ### Error: "Invalid client credentials"
 
