@@ -20,7 +20,7 @@ export default function RestaurantDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
-  const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(null);
 
   useEffect(() => {
     loadRestaurantData();
@@ -42,7 +42,7 @@ export default function RestaurantDetailPage() {
     }
   };
 
-  const handleAddToCart = async (menu: any) => {
+  const handleAddToCart = async (menu) => {
     if (!user) {
       router.push('/signin');
       return;
@@ -78,7 +78,7 @@ export default function RestaurantDetailPage() {
       setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 2000);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding to cart:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Gagal menambahkan ke keranjang';
       setNotificationMessage(errorMessage);
