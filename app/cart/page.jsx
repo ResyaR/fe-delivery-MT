@@ -105,7 +105,7 @@ export default function CartPage() {
     setPromoSuccess('');
   };
 
-  const handleUpdateQuantity = async (menuId: number, newQty: number) => {
+  const handleUpdateQuantity = async (menuId, newQty) => {
     if (newQty < 1) {
       await handleRemoveFromCart(menuId);
       return;
@@ -113,7 +113,7 @@ export default function CartPage() {
     setUpdatingItem(menuId);
     try {
       await updateQuantity(menuId, newQty);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating quantity:', error);
       alert(error.message || 'Gagal mengupdate jumlah item');
     } finally {
@@ -121,10 +121,10 @@ export default function CartPage() {
     }
   };
 
-  const handleRemoveFromCart = async (menuId: number) => {
+  const handleRemoveFromCart = async (menuId) => {
     try {
       await removeFromCart(menuId);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error removing from cart:', error);
       alert(error.message || 'Gagal menghapus item dari keranjang');
     }
