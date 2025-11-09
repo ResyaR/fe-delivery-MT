@@ -65,27 +65,46 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setIsSyncing(true);
     setIsLoading(true);
     try {
+      // Always sync from backend first (this is the source of truth)
       const backendCart = await CartAPI.getCart();
       const frontendCart = convertBackendCartToFrontend(backendCart);
       setCart(frontendCart);
       
-      // Also save to localStorage as backup
+      // Save to localStorage as backup (only after successful backend sync)
       if (frontendCart.length > 0) {
         localStorage.setItem('foodCart', JSON.stringify(frontendCart));
       } else {
+        // If backend cart is empty, remove localStorage to avoid confusion
         localStorage.removeItem('foodCart');
       }
     } catch (error) {
       console.error('Error syncing cart from backend:', error);
-      // Fallback to localStorage if backend fails
-      const savedCart = localStorage.getItem('foodCart');
-      if (savedCart) {
-        try {
-          setCart(JSON.parse(savedCart));
-        } catch (parseError) {
-          console.error('Error parsing saved cart:', parseError);
+      // Only fallback to localStorage if backend fails AND user is logged in
+      // This ensures we don't use stale cart data from previous user
+      if (user) {
+        const savedCart = localStorage.getItem('foodCart');
+        if (savedCart) {
+          try {
+            const parsedCart = JSON.parse(savedCart);
+            // Only use localStorage if it seems valid (has items with menuId)
+            if (Array.isArray(parsedCart) && parsedCart.length > 0 && parsedCart[0].menuId) {
+              console.warn('Using localStorage cart as fallback (backend sync failed)');
+              setCart(parsedCart);
+            } else {
+              console.warn('localStorage cart seems invalid, clearing it');
+              localStorage.removeItem('foodCart');
+              setCart([]);
+            }
+          } catch (parseError) {
+            console.error('Error parsing saved cart:', parseError);
+            setCart([]);
+            localStorage.removeItem('foodCart');
+          }
+        } else {
           setCart([]);
         }
+      } else {
+        setCart([]);
       }
     } finally {
       setIsSyncing(false);
@@ -93,19 +112,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isSyncing]);
 
-  // Clear cart when user changes (different user logged in)
+  // Clear cart when user changes (different user logged in or logged out)
   useEffect(() => {
     const currentUserId = user?.email || null;
     
-    // If user changed (different user logged in), clear cart
-    if (lastUserId !== null && lastUserId !== currentUserId && currentUserId !== null) {
-      console.log('User changed, clearing cart');
-      setCart([]);
-      localStorage.removeItem('foodCart');
-    }
-    
-    // Update last user ID
-    if (currentUserId !== lastUserId) {
+    // If user changed (including initial login or logout)
+    if (lastUserId !== currentUserId) {
+      if (currentUserId !== null) {
+        // User logged in (either first time or different user)
+        // Clear local state and localStorage to prevent using stale data
+        // Backend sync will load the correct cart for this user
+        console.log('User logged in, clearing local cart state. Will sync cart from backend.');
+        setCart([]);
+        localStorage.removeItem('foodCart');
+      } else {
+        // User logged out - clear everything
+        console.log('User logged out, clearing cart');
+        setCart([]);
+        localStorage.removeItem('foodCart');
+      }
+      
+      // Update last user ID
       setLastUserId(currentUserId);
     }
   }, [user, lastUserId]);
@@ -113,13 +140,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Load cart from backend when user logs in
   useEffect(() => {
     if (!user) {
-      // If no user, clear cart
-      setCart([]);
-      localStorage.removeItem('foodCart');
+      // If no user, cart should already be cleared by user change effect
       return;
     }
 
-    // Sync cart from backend
+    // Always sync cart from backend when user is available
+    // This ensures cart is loaded from database after login
+    // localStorage has been cleared in the previous effect, so we won't use stale data
     syncCart();
   }, [user, syncCart]);
 

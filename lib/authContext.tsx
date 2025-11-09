@@ -46,10 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await authLogin(email, password);
       
-      // Clear cart from previous user (if any) before setting new user
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('foodCart');
-      }
+      // Don't clear cart here - let CartContext handle syncing from backend
+      // Cart will be synced from database when user is set and CartContext detects the user
       
       // After successful login, get the current user
       const currentUser = await getCurrentUser();

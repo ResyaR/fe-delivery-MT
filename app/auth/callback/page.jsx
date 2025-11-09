@@ -41,8 +41,8 @@ function OAuthCallbackContent() {
           return;
         }
 
-        // Clear cart from previous user (if any) before storing new tokens
-        localStorage.removeItem('foodCart');
+        // Don't clear cart here - let CartContext handle syncing from backend
+        // Cart will be synced from database when user is set and CartContext detects the user
         
         // Store tokens
         localStorage.setItem('token', accessToken);
