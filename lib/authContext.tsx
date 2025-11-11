@@ -33,9 +33,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      try {
+        if (currentUser) {
+          localStorage.setItem('user', JSON.stringify(currentUser));
+        } else {
+          localStorage.removeItem('user');
+        }
+      } catch {}
     } catch (error) {
       console.error('Error checking auth:', error);
       setUser(null);
+      try {
+        localStorage.removeItem('user');
+      } catch {}
     } finally {
       setLoading(false);
     }

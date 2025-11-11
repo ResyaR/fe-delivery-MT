@@ -48,6 +48,7 @@ export default function RestaurantDetailPage() {
       return;
     }
 
+    // Tampilkan feedback singkat lalu lepas spinner segera (optimistic)
     setIsAddingToCart(menu.id);
     try {
       // Check if cart has items from different restaurant
@@ -66,7 +67,8 @@ export default function RestaurantDetailPage() {
         }
       }
 
-      await addToCart({
+      // Jalankan addToCart tanpa await agar UI tidak menunggu respons server
+      const addPromise = addToCart({
         menuId: menu.id,
         menuName: menu.name,
         price: parseFloat(menu.price),
@@ -75,9 +77,19 @@ export default function RestaurantDetailPage() {
         restaurantName: restaurant.name,
       });
 
+      // Beri notifikasi sukses langsung (optimistic)
       setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
       setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 2000);
+      setTimeout(() => setShowNotification(false), 1500);
+
+      // Tangani error backend di background (rollback sudah ditangani di context)
+      addPromise.catch((error) => {
+        console.error('Error adding to cart:', error);
+        const errorMessage = error?.message || error?.response?.data?.message || 'Gagal menambahkan ke keranjang';
+        setNotificationMessage(errorMessage);
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      });
     } catch (error) {
       console.error('Error adding to cart:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Gagal menambahkan ke keranjang';
@@ -85,6 +97,7 @@ export default function RestaurantDetailPage() {
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
     } finally {
+      // Lepas spinner segera agar tombol tidak terasa “loading lama”
       setIsAddingToCart(null);
     }
   };
