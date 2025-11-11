@@ -44,14 +44,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleLogin = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await authLogin(email, password);
-      
-      // Don't clear cart here - let CartContext handle syncing from backend
-      // Cart will be synced from database when user is set and CartContext detects the user
-      
-      // After successful login, get the current user
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
+      const loginResult = await authLogin(email, password);
+
+      // Fast-path: gunakan user dari hasil login agar header update instan
+      if ((loginResult as any)?.user) {
+        const loggedInUser = (loginResult as any).user as User;
+        setUser(loggedInUser);
+        try {
+          localStorage.setItem('user', JSON.stringify(loggedInUser));
+        } catch {}
+      } else {
+        // Fallback: ambil profile jika server tidak mengembalikan user
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        try {
+          if (currentUser) localStorage.setItem('user', JSON.stringify(currentUser));
+        } catch {}
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error; // Re-throw to let the component handle the error
@@ -109,6 +118,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
       return;
     }
+
+    // Hydrate cepat dari cache agar header segera berubah
+    try {
+      const cached = localStorage.getItem('user');
+      if (cached) {
+        const cachedUser = JSON.parse(cached) as User;
+        if (cachedUser?.email) {
+          setUser(cachedUser);
+          setLoading(false);
+          // Sinkronisasi di background tanpa mengubah loading state
+          checkAuth().catch(() => {});
+          return;
+        }
+      }
+    } catch {}
+
+    // Jika tidak ada cache, lakukan checkAuth biasa
     checkAuth();
   }, []);
 

@@ -168,40 +168,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Find existing item to determine quantity increment
+    // Optimistic UI: update immediately
+    const previousCart = cart;
+    const optimisticCart = (() => {
       const existingItem = cart.find((cartItem) => cartItem.menuId === item.menuId);
-      const quantityToAdd = existingItem ? 1 : 1; // Always add 1, backend will handle increment if exists
+      return existingItem
+        ? cart.map((cartItem) =>
+            cartItem.menuId === item.menuId
+              ? { ...cartItem, quantity: cartItem.quantity + 1 }
+              : cartItem
+          )
+        : [...cart, { ...item, quantity: 1 }];
+    })();
+    setCart(optimisticCart);
 
-      const backendCart = await CartAPI.addItemToCart(item.menuId, quantityToAdd);
+    try {
+      const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       setCart(frontendCart);
-      
-      // Save to localStorage as backup
       localStorage.setItem('foodCart', JSON.stringify(frontendCart));
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
-      // Fallback to localStorage update
-      setCart((prevCart) => {
-        const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
-        const newCart = existingItem
-          ? prevCart.map((cartItem) =>
-              cartItem.menuId === item.menuId
-                ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                : cartItem
-            )
-          : [...prevCart, { ...item, quantity: 1 }];
-        localStorage.setItem('foodCart', JSON.stringify(newCart));
-        return newCart;
-      });
-      
-      // Show error message if it's a validation error
-      if (error.response?.status === 400) {
+      // Rollback optimistic update
+      setCart(previousCart);
+      // Surface validation error
+      if (error?.response?.status === 400) {
         throw new Error(error.response?.data?.message || 'Failed to add item to cart');
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
