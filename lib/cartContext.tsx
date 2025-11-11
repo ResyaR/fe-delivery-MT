@@ -41,6 +41,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const getUserSnapshotKey = (userEmail?: string | null) =>
     userEmail ? `foodCart:${userEmail}` : null;
 
+  const persistCartForUser = (items: CartItem[]) => {
+    // Persist general fallback
+    if (items.length > 0) {
+      localStorage.setItem('foodCart', JSON.stringify(items));
+    } else {
+      localStorage.removeItem('foodCart');
+    }
+    // Persist per-user snapshot to avoid flicker and stale hydration
+    try {
+      const snapshotKey = getUserSnapshotKey(user?.email || null);
+      if (snapshotKey) {
+        if (items.length > 0) {
+          sessionStorage.setItem(snapshotKey, JSON.stringify(items));
+        } else {
+          sessionStorage.removeItem(snapshotKey);
+        }
+      }
+    } catch {}
+  };
+
   // Convert backend cart response to frontend cart items
   const convertBackendCartToFrontend = (backendCart: CartResponse, restaurantNameOverride?: string): CartItem[] => {
     if (!backendCart.items || backendCart.items.length === 0) {
@@ -75,20 +95,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setCart(frontendCart);
       
       // Save to localStorage as backup (only after successful backend sync)
-      if (frontendCart.length > 0) {
-        localStorage.setItem('foodCart', JSON.stringify(frontendCart));
-      } else {
-        // If backend cart is empty, remove localStorage to avoid confusion
-        localStorage.removeItem('foodCart');
-      }
-
-      // Save a per-user session snapshot to avoid flicker on next login
-      try {
-        const snapshotKey = getUserSnapshotKey(user?.email || null);
-        if (snapshotKey) {
-          sessionStorage.setItem(snapshotKey, JSON.stringify(frontendCart));
-        }
-      } catch {}
+      persistCartForUser(frontendCart);
     } catch (error) {
       console.error('Error syncing cart from backend:', error);
       // Only fallback to localStorage if backend fails AND user is logged in
@@ -221,7 +228,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       setCart(frontendCart);
-      localStorage.setItem('foodCart', JSON.stringify(frontendCart));
+      persistCartForUser(frontendCart);
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
       // Rollback optimistic update
@@ -269,11 +276,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const backendCart = await CartAPI.removeItemFromCart(cartItem.id);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       setCart(frontendCart);
-      if (frontendCart.length > 0) {
-        localStorage.setItem('foodCart', JSON.stringify(frontendCart));
-      } else {
-        localStorage.removeItem('foodCart');
-      }
+      persistCartForUser(frontendCart);
     } catch (error) {
       console.error('Error removing item from cart:', error);
       // Rollback optimistic change
@@ -324,7 +327,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setCart(frontendCart);
       
       // Update localStorage
-      localStorage.setItem('foodCart', JSON.stringify(frontendCart));
+      persistCartForUser(frontendCart);
     } catch (error) {
       console.error('Error updating cart item:', error);
       // Fallback to localStorage update
@@ -352,12 +355,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       await CartAPI.clearCart();
       setCart([]);
-      localStorage.removeItem('foodCart');
+      persistCartForUser([]);
     } catch (error) {
       console.error('Error clearing cart:', error);
       // Fallback: clear local state anyway
       setCart([]);
-      localStorage.removeItem('foodCart');
+      persistCartForUser([]);
     } finally {
       setIsLoading(false);
     }
