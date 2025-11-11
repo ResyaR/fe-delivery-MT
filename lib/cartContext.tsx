@@ -25,6 +25,7 @@ interface CartContextType {
   getTotalPrice: () => number;
   getRestaurantId: () => number | null;
   isLoading: boolean;
+  isSyncing: boolean;
   syncCart: () => Promise<void>;
 }
 
@@ -36,6 +37,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [lastUserId, setLastUserId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  const getUserSnapshotKey = (userEmail?: string | null) =>
+    userEmail ? `foodCart:${userEmail}` : null;
 
   // Convert backend cart response to frontend cart items
   const convertBackendCartToFrontend = (backendCart: CartResponse, restaurantNameOverride?: string): CartItem[] => {
@@ -77,6 +81,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         // If backend cart is empty, remove localStorage to avoid confusion
         localStorage.removeItem('foodCart');
       }
+
+      // Save a per-user session snapshot to avoid flicker on next login
+      try {
+        const snapshotKey = getUserSnapshotKey(user?.email || null);
+        if (snapshotKey) {
+          sessionStorage.setItem(snapshotKey, JSON.stringify(frontendCart));
+        }
+      } catch {}
     } catch (error) {
       console.error('Error syncing cart from backend:', error);
       // Only fallback to localStorage if backend fails AND user is logged in
@@ -112,24 +124,47 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isSyncing]);
 
-  // Clear cart when user changes (different user logged in or logged out)
+  // Handle cart when user changes (different user logged in or logged out)
   useEffect(() => {
     const currentUserId = user?.email || null;
     
     // If user changed (including initial login or logout)
     if (lastUserId !== currentUserId) {
       if (currentUserId !== null) {
-        // User logged in (either first time or different user)
-        // Clear local state and localStorage to prevent using stale data
-        // Backend sync will load the correct cart for this user
-        console.log('User logged in, clearing local cart state. Will sync cart from backend.');
-        setCart([]);
+        // User logged in
+        // 1) Try hydrate from per-user session snapshot for instant UI (avoids empty flicker)
+        try {
+          const snapshotKey = getUserSnapshotKey(currentUserId);
+          if (snapshotKey) {
+            const snapshot = sessionStorage.getItem(snapshotKey);
+            if (snapshot) {
+              const parsed = JSON.parse(snapshot);
+              if (Array.isArray(parsed)) {
+                setCart(parsed);
+              }
+            }
+          }
+        } catch {}
+
+        // 2) Clear cross-user localStorage to avoid stale data mixing
         localStorage.removeItem('foodCart');
       } else {
         // User logged out - clear everything
         console.log('User logged out, clearing cart');
         setCart([]);
         localStorage.removeItem('foodCart');
+        try {
+          // Optionally clear all per-user snapshots on logout
+          // If you want to retain last state per user for same-session relogin, comment this block
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('foodCart:')) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+        } catch {}
       }
       
       // Update last user ID
@@ -353,6 +388,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         getTotalPrice,
         getRestaurantId,
         isLoading,
+        isSyncing,
         syncCart,
       }}
     >
