@@ -213,21 +213,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setIsLoading(true);
+    // Optimistic removal
+    const previousCart = cart;
+    const cartItem = cart.find((item) => item.menuId === menuId);
+    const optimisticCart = cart.filter((item) => item.menuId !== menuId);
+    setCart(optimisticCart);
+    if (optimisticCart.length > 0) {
+      localStorage.setItem('foodCart', JSON.stringify(optimisticCart));
+    } else {
+      localStorage.removeItem('foodCart');
+    }
+
     try {
-      // Find cart item ID
-      const cartItem = cart.find((item) => item.menuId === menuId);
       if (!cartItem?.id) {
-        // Fallback if no ID (shouldn't happen, but handle gracefully)
-        setCart((prevCart) => prevCart.filter((item) => item.menuId !== menuId));
+        // If we don't have an ID, try to resync to be safe
+        await syncCart();
         return;
       }
 
       const backendCart = await CartAPI.removeItemFromCart(cartItem.id);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       setCart(frontendCart);
-      
-      // Update localStorage
       if (frontendCart.length > 0) {
         localStorage.setItem('foodCart', JSON.stringify(frontendCart));
       } else {
@@ -235,18 +241,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error('Error removing item from cart:', error);
-      // Fallback to localStorage update
-      setCart((prevCart) => {
-        const newCart = prevCart.filter((item) => item.menuId !== menuId);
-        if (newCart.length > 0) {
-          localStorage.setItem('foodCart', JSON.stringify(newCart));
-        } else {
-          localStorage.removeItem('foodCart');
-        }
-        return newCart;
-      });
-    } finally {
-      setIsLoading(false);
+      // Rollback optimistic change
+      setCart(previousCart);
+      if (previousCart.length > 0) {
+        localStorage.setItem('foodCart', JSON.stringify(previousCart));
+      } else {
+        localStorage.removeItem('foodCart');
+      }
+      throw error;
     }
   };
 

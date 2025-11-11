@@ -97,28 +97,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleLogout = async () => {
-    setLoading(true);
+    // Instant UI update (optimistic logout)
+    try {
+      setUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+        localStorage.removeItem('foodCart');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+      }
+    } catch {}
+
+    // Redirect segera agar header dan halaman langsung berubah
+    if (typeof window !== 'undefined') {
+      window.location.href = '/signin';
+    }
+
+    // Jalankan logout API di background (best effort)
     try {
       await authLogout();
-      setUser(null);
-      
-      // Clear cart data when user logs out
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('foodCart');
-        window.location.href = '/signin';  // Force a full page reload
-      }
     } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear user state even if API call fails
-      setUser(null);
-      
-      // Clear cart data even if logout API fails
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('foodCart');
-        window.location.href = '/signin';
-      }
-    } finally {
-      setLoading(false);
+      console.error('Logout error (background):', error);
     }
   };
 
