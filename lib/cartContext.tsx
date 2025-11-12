@@ -229,17 +229,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           
           if (updatedCartItem?.id) {
             // Now remove with proper ID
-            const removedCart = await CartAPI.removeItemFromCart(updatedCartItem.id);
-            const finalCart = convertBackendCartToFrontend(removedCart);
-            
-            // Jika backend return empty array padahal optimistic masih ada item lain, 
-            // kemungkinan ada masalah dengan backend response - keep optimistic update
-            if (finalCart.length === 0 && optimisticCart.length > 0) {
-              console.warn('Backend returned empty cart after removal (with sync), but optimistic cart still has items. Keeping optimistic update.');
-              // Tetap update dengan optimistic cart (sudah di-set sebelumnya)
-            } else {
-              // Backend return data yang valid, update dengan data dari backend
+            try {
+              const removedCart = await CartAPI.removeItemFromCart(updatedCartItem.id);
+              const finalCart = convertBackendCartToFrontend(removedCart);
+              // Update dengan data dari backend (selalu gunakan data dari backend sebagai source of truth)
               setCart(finalCart);
+            } catch (removeError: any) {
+              // Jika error 404, berarti item sudah tidak ada di backend
+              if (removeError?.response?.status === 404 || removeError?.message?.includes('not found')) {
+                console.warn('Item not found in backend (404) during removal, syncing cart to get latest state...');
+                // Sync cart untuk mendapatkan state terbaru
+                try {
+                  const backendCart = await CartAPI.getCart();
+                  const frontendCart = convertBackendCartToFrontend(backendCart);
+                  setCart(frontendCart);
+                } catch (syncError) {
+                  console.error('Error syncing cart after 404:', syncError);
+                  // Jika sync gagal, keep optimistic removal
+                }
+              } else {
+                // Error selain 404, throw error
+                throw removeError;
+              }
             }
           } else {
             // Item not found after sync, keep optimistic update
@@ -255,21 +266,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const backendCart = await CartAPI.removeItemFromCart(cartItem.id);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       
-      // Update dengan data dari backend
-      // Jika backend return empty array padahal optimistic masih ada item lain, 
-      // kemungkinan ada masalah dengan backend response - keep optimistic update
-      if (frontendCart.length === 0 && optimisticCart.length > 0) {
-        // Backend return empty tapi optimistic masih ada item, keep optimistic
-        // Ini bisa terjadi jika ada delay atau race condition di backend
-        console.warn('Backend returned empty cart after removal, but optimistic cart still has items. Keeping optimistic update.');
-        // Tetap update dengan optimistic cart (sudah di-set sebelumnya)
-      } else {
-        // Backend return data yang valid, update dengan data dari backend
-        setCart(frontendCart);
-      }
+      // Update dengan data dari backend (selalu gunakan data dari backend sebagai source of truth)
+      setCart(frontendCart);
     } catch (error: any) {
       console.error('Error removing item from cart:', error);
-      // Rollback optimistic change
+      
+      // Jika error 404, berarti item sudah tidak ada di backend (mungkin sudah dihapus sebelumnya)
+      // Anggap sudah berhasil dihapus, jangan rollback
+      if (error?.response?.status === 404 || error?.message?.includes('not found')) {
+        console.warn('Item not found in backend (404), assuming already deleted. Syncing cart to get latest state...');
+        // Sync cart untuk mendapatkan state terbaru dari backend
+        try {
+          const backendCart = await CartAPI.getCart();
+          const frontendCart = convertBackendCartToFrontend(backendCart);
+          setCart(frontendCart);
+        } catch (syncError) {
+          console.error('Error syncing cart after 404:', syncError);
+          // Jika sync gagal, keep optimistic removal (item sudah dihapus di UI)
+        }
+        return; // Exit early, tidak perlu throw error
+      }
+      
+      // Untuk error selain 404, rollback optimistic change
       setCart(previousCart);
       
       const errorMessage = error?.response?.data?.message || 
