@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import Toast from './Toast';
 
 const ToastContext = createContext();
@@ -29,6 +29,20 @@ export const ToastProvider = ({ children }) => {
   const showError = (message) => showToast(message, 'error');
   const showWarning = (message) => showToast(message, 'warning');
   const showInfo = (message) => showToast(message, 'info');
+
+  // Listen for logout success event
+  useEffect(() => {
+    const handleLogoutSuccess = (event) => {
+      const message = event.detail?.message || 'Logout berhasil';
+      showToast(message, 'success');
+    };
+
+    window.addEventListener('logout-success', handleLogoutSuccess);
+
+    return () => {
+      window.removeEventListener('logout-success', handleLogoutSuccess);
+    };
+  }, [showToast]);
 
   return (
     <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo }}>

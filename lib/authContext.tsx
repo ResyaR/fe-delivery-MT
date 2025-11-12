@@ -28,6 +28,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+  const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [tokenVersion, setTokenVersion] = useState(0); // Force re-run when token changes
 
   const checkAuth = async () => {
     try {
@@ -71,6 +73,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (currentUser) localStorage.setItem('user', JSON.stringify(currentUser));
         } catch {}
       }
+
+      // Trigger token refresh setup with new token
+      setTokenVersion(prev => prev + 1);
     } catch (error) {
       console.error('Login error:', error);
       throw error; // Re-throw to let the component handle the error
@@ -97,7 +102,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleLogout = async () => {
-    // Instant UI update (optimistic logout)
+    // Clear all timers first
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+      setRefreshTimer(null);
+    }
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      setCheckInterval(null);
+    }
+
+    try {
+      // Panggil API logout SEBELUM clear localStorage
+      // Token masih ada di sini, jadi API bisa dipanggil dengan benar
+      await authLogout();
+      
+      // Dispatch event untuk notifikasi sukses (sebelum redirect)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('logout-success', {
+          detail: { message: 'Logout berhasil' }
+        }));
+      }
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Meskipun API gagal, tetap lanjutkan logout untuk UX
+      // Dispatch event untuk notifikasi (meskipun API gagal, logout tetap dilakukan)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('logout-success', {
+          detail: { message: 'Anda telah logout' }
+        }));
+      }
+    }
+
+    // Setelah API selesai (atau gagal), baru clear localStorage
     try {
       setUser(null);
       if (typeof window !== 'undefined') {
@@ -108,16 +145,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch {}
 
-    // Redirect segera agar header dan halaman langsung berubah
+    // Redirect setelah delay singkat untuk memberi waktu notifikasi muncul
     if (typeof window !== 'undefined') {
-      window.location.href = '/signin';
-    }
-
-    // Jalankan logout API di background (best effort)
-    try {
-      await authLogout();
-    } catch (error) {
-      console.error('Logout error (background):', error);
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 1500); // Delay 1.5 detik untuk notifikasi terlihat
     }
   };
 
@@ -147,33 +179,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
-  // Auto-refresh token mechanism
+  // Auto-refresh token mechanism with periodic check
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !user) {
-      // Clear timer jika tidak ada token atau user
+      // Clear timers jika tidak ada token atau user
       if (refreshTimer) {
         clearTimeout(refreshTimer);
         setRefreshTimer(null);
+      }
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        setCheckInterval(null);
       }
       return;
     }
 
     const setupAutoRefresh = () => {
-      const expiryTime = getTokenExpiryTime(token);
-      if (!expiryTime) return;
+      // Clear existing timer first
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        setRefreshTimer(null);
+      }
+
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) return;
+
+      const expiryTime = getTokenExpiryTime(currentToken);
+      if (!expiryTime) {
+        console.warn('[Auth] Cannot get token expiry time');
+        return;
+      }
 
       const now = Date.now();
       const timeUntilExpiry = expiryTime - now;
       
       // Refresh 2 menit sebelum expire (atau 80% dari waktu expire, whichever is earlier)
-      const refreshTime = Math.max(
-        timeUntilExpiry - (2 * 60 * 1000), // 2 menit sebelum
-        Math.min(timeUntilExpiry * 0.8, timeUntilExpiry - (2 * 60 * 1000)) // 80% waktu atau 2 menit sebelum
-      );
+      // Access token biasanya 15 menit, jadi:
+      // - 80% dari 15 menit = 12 menit (refresh setelah 3 menit)
+      // - 2 menit sebelum = refresh di menit ke-13
+      // Ambil yang lebih awal (lebih cepat refresh)
+      const refreshAt80Percent = timeUntilExpiry * 0.8;
+      const refreshAt2MinBefore = timeUntilExpiry - (2 * 60 * 1000);
+      const refreshTime = Math.min(refreshAt80Percent, refreshAt2MinBefore);
 
       if (refreshTime > 0) {
-        console.log(`[Auth] Auto-refresh scheduled in ${Math.round(refreshTime / 1000)} seconds`);
+        const refreshTimeSeconds = Math.round(refreshTime / 1000);
+        const refreshTimeMinutes = Math.round(refreshTime / 60000);
+        console.log(`[Auth] Auto-refresh scheduled in ${refreshTimeMinutes} minutes (${refreshTimeSeconds} seconds)`);
         
         const timer = setTimeout(async () => {
           try {
@@ -181,38 +234,132 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const newToken = await refreshAuthToken();
             
             if (newToken) {
-              console.log('[Auth] Token refreshed successfully');
-              // Token updated, trigger re-setup
-              // The new token will be picked up in next effect run
+              console.log('[Auth] Token refreshed successfully, setting up new timer');
+              // Token updated, increment version to trigger re-setup
+              setTokenVersion(prev => prev + 1);
             } else {
               console.error('[Auth] Failed to refresh token');
-              // Token refresh gagal, logout user
-              await handleLogout();
+              // Check if refresh token is still valid before logging out
+              const refreshToken = localStorage.getItem('refresh_token');
+              if (!refreshToken) {
+                console.error('[Auth] No refresh token available, logging out');
+                await handleLogout();
+              } else {
+                // Retry once more after a short delay
+                console.log('[Auth] Retrying token refresh in 5 seconds...');
+                setTimeout(async () => {
+                  const retryToken = await refreshAuthToken();
+                  if (!retryToken) {
+                    await handleLogout();
+                  } else {
+                    setTokenVersion(prev => prev + 1);
+                  }
+                }, 5000);
+              }
             }
           } catch (error) {
             console.error('[Auth] Auto refresh error:', error);
-            // Jika refresh gagal, logout user
-            await handleLogout();
+            // Check if we should retry or logout
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              // Retry once more
+              setTimeout(async () => {
+                try {
+                  const retryToken = await refreshAuthToken();
+                  if (!retryToken) {
+                    await handleLogout();
+                  } else {
+                    setTokenVersion(prev => prev + 1);
+                  }
+                } catch {
+                  await handleLogout();
+                }
+              }, 5000);
+            } else {
+              await handleLogout();
+            }
           }
         }, refreshTime);
 
         setRefreshTimer(timer);
       } else if (timeUntilExpiry > 0) {
-        // Token akan expire segera, refresh sekarang
+        // Token akan expire segera (kurang dari 2 menit), refresh sekarang
         console.log('[Auth] Token expiring soon, attempting refresh now');
-        refreshAuthToken().catch(() => handleLogout());
+        refreshAuthToken()
+          .then((newToken) => {
+            if (newToken) {
+              setTokenVersion(prev => prev + 1);
+            } else {
+              handleLogout();
+            }
+          })
+          .catch(() => handleLogout());
+      } else {
+        // Token sudah expired, coba refresh dulu
+        console.warn('[Auth] Token already expired, attempting refresh');
+        refreshAuthToken()
+          .then((newToken) => {
+            if (newToken) {
+              setTokenVersion(prev => prev + 1);
+            } else {
+              handleLogout();
+            }
+          })
+          .catch(() => handleLogout());
       }
     };
 
+    // Setup initial refresh timer
     setupAutoRefresh();
 
-    // Cleanup timer saat component unmount atau dependencies berubah
+    // Setup periodic check every 1 minute to ensure token doesn't expire
+    // This handles cases where user is idle and no requests are made
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken || !user) {
+        clearInterval(interval);
+        return;
+      }
+
+      const expiryTime = getTokenExpiryTime(currentToken);
+      if (!expiryTime) return;
+
+      const now = Date.now();
+      const timeUntilExpiry = expiryTime - now;
+      
+      // If token expires in less than 3 minutes, refresh it
+      if (timeUntilExpiry < 3 * 60 * 1000 && timeUntilExpiry > 0) {
+        console.log('[Auth] Periodic check: Token expiring soon, refreshing...');
+        refreshAuthToken()
+          .then((newToken) => {
+            if (newToken) {
+              console.log('[Auth] Token refreshed via periodic check');
+              setTokenVersion(prev => prev + 1);
+            }
+          })
+          .catch((error) => {
+            console.error('[Auth] Periodic refresh failed:', error);
+            // Don't logout immediately, let the timer handle it
+          });
+      }
+    }, 60 * 1000); // Check every 1 minute
+
+    setCheckInterval(interval);
+
+    // Cleanup timers saat component unmount atau dependencies berubah
     return () => {
       if (refreshTimer) {
         clearTimeout(refreshTimer);
+        setRefreshTimer(null);
       }
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        setCheckInterval(null);
+      }
+      // Also cleanup the interval we just created
+      clearInterval(interval);
     };
-  }, [user]);
+  }, [user, tokenVersion]); // Add tokenVersion to dependencies
 
   return (
     <AuthContext.Provider value={{ 

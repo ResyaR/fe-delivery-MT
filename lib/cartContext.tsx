@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from './authContext';
 import CartAPI, { CartResponse, CartItemResponse } from './cartApi';
 
@@ -37,6 +37,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [lastUserId, setLastUserId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncCartRef = useRef<(() => Promise<void>) | null>(null);
 
   const getUserSnapshotKey = (userEmail?: string | null) =>
     userEmail ? `foodCart:${userEmail}` : null;
@@ -131,6 +132,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isSyncing]);
 
+  // Store syncCart in ref to avoid dependency issues
+  syncCartRef.current = syncCart;
+
   // Handle cart when user changes (different user logged in or logged out)
   useEffect(() => {
     const currentUserId = user?.email || null;
@@ -189,8 +193,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Always sync cart from backend when user is available
     // This ensures cart is loaded from database after login
     // localStorage has been cleared in the previous effect, so we won't use stale data
-    syncCart();
-  }, [user, syncCart]);
+    // Use ref to avoid dependency loop
+    if (syncCartRef.current) {
+      syncCartRef.current();
+    }
+  }, [user]); // Only depend on user, not syncCart
 
   const addToCart = async (item: Omit<CartItem, 'quantity' | 'id'>) => {
     if (!user) {
@@ -204,7 +211,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 : cartItem
             )
           : [...prevCart, { ...item, quantity: 1 }];
-        localStorage.setItem('foodCart', JSON.stringify(newCart));
+        persistCartForUser(newCart);
         return newCart;
       });
       return;
@@ -233,10 +240,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error adding item to cart:', error);
       // Rollback optimistic update
       setCart(previousCart);
-      // Surface validation error
-      if (error?.response?.status === 400) {
-        throw new Error(error.response?.data?.message || 'Failed to add item to cart');
-      }
+      persistCartForUser(previousCart);
+      
+      // Surface all errors with proper messages
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          'Gagal menambahkan item ke keranjang';
+      throw new Error(errorMessage);
     }
   };
 
@@ -245,48 +255,77 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // If no user, use localStorage only
       setCart((prevCart) => {
         const newCart = prevCart.filter((item) => item.menuId !== menuId);
-        if (newCart.length > 0) {
-          localStorage.setItem('foodCart', JSON.stringify(newCart));
-        } else {
-          localStorage.removeItem('foodCart');
-        }
+        persistCartForUser(newCart);
         return newCart;
       });
       return;
     }
 
-    // Optimistic removal
-    const previousCart = cart;
+    // Find cart item first
     const cartItem = cart.find((item) => item.menuId === menuId);
-    const optimisticCart = cart.filter((item) => item.menuId !== menuId);
-    setCart(optimisticCart);
-    if (optimisticCart.length > 0) {
-      localStorage.setItem('foodCart', JSON.stringify(optimisticCart));
-    } else {
-      localStorage.removeItem('foodCart');
+    
+    // If item not found, nothing to remove
+    if (!cartItem) {
+      console.warn('Item not found in cart:', menuId);
+      return;
     }
 
-    try {
-      if (!cartItem?.id) {
-        // If we don't have an ID, try to resync to be safe
-        await syncCart();
-        return;
+    // If cart item doesn't have ID, sync first to get proper IDs
+    if (!cartItem.id) {
+      console.warn('Cart item missing ID, syncing cart first...');
+      try {
+        // Sync cart to get proper IDs from backend
+        const backendCart = await CartAPI.getCart();
+        const frontendCart = convertBackendCartToFrontend(backendCart);
+        setCart(frontendCart);
+        persistCartForUser(frontendCart);
+        
+        // After sync, find the item again with proper ID
+        const updatedCartItem = frontendCart.find((item) => item.menuId === menuId);
+        
+        if (updatedCartItem?.id) {
+          // Now remove with proper ID
+          const removedCart = await CartAPI.removeItemFromCart(updatedCartItem.id);
+          const finalCart = convertBackendCartToFrontend(removedCart);
+          setCart(finalCart);
+          persistCartForUser(finalCart);
+        } else {
+          // Item not found after sync, just update local state
+          const newCart = frontendCart.filter((item) => item.menuId !== menuId);
+          setCart(newCart);
+          persistCartForUser(newCart);
+        }
+      } catch (error) {
+        console.error('Error syncing cart before removal:', error);
+        // Fallback: just remove from local state
+        const newCart = cart.filter((item) => item.menuId !== menuId);
+        setCart(newCart);
+        persistCartForUser(newCart);
       }
+      return;
+    }
 
+    // Optimistic removal
+    const previousCart = cart;
+    const optimisticCart = cart.filter((item) => item.menuId !== menuId);
+    setCart(optimisticCart);
+    persistCartForUser(optimisticCart);
+
+    try {
       const backendCart = await CartAPI.removeItemFromCart(cartItem.id);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       setCart(frontendCart);
       persistCartForUser(frontendCart);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing item from cart:', error);
       // Rollback optimistic change
       setCart(previousCart);
-      if (previousCart.length > 0) {
-        localStorage.setItem('foodCart', JSON.stringify(previousCart));
-      } else {
-        localStorage.removeItem('foodCart');
-      }
-      throw error;
+      persistCartForUser(previousCart);
+      
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          'Gagal menghapus item dari keranjang';
+      throw new Error(errorMessage);
     }
   };
 
@@ -302,42 +341,70 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const newCart = prevCart.map((item) =>
           item.menuId === menuId ? { ...item, quantity } : item
         );
-        localStorage.setItem('foodCart', JSON.stringify(newCart));
+        persistCartForUser(newCart);
         return newCart;
       });
       return;
     }
 
     setIsLoading(true);
+    const previousCart = cart;
+    
+    // Optimistic update
+    const optimisticCart = cart.map((item) =>
+      item.menuId === menuId ? { ...item, quantity } : item
+    );
+    setCart(optimisticCart);
+    persistCartForUser(optimisticCart);
+
     try {
       // Find cart item ID
       const cartItem = cart.find((item) => item.menuId === menuId);
+      
       if (!cartItem?.id) {
-        // Fallback if no ID
-        setCart((prevCart) =>
-          prevCart.map((item) =>
-            item.menuId === menuId ? { ...item, quantity } : item
-          )
-        );
+        // If no ID, sync first to get proper IDs
+        console.warn('Cart item missing ID, syncing cart first...');
+        try {
+          // Sync cart to get proper IDs from backend
+          const syncedCart = await CartAPI.getCart();
+          const frontendCart = convertBackendCartToFrontend(syncedCart);
+          setCart(frontendCart);
+          persistCartForUser(frontendCart);
+          
+          // After sync, find the item again with proper ID
+          const updatedCartItem = frontendCart.find((item) => item.menuId === menuId);
+          
+          if (updatedCartItem?.id) {
+            // Now update with proper ID
+            const backendCart = await CartAPI.updateCartItem(updatedCartItem.id, quantity);
+            const finalCart = convertBackendCartToFrontend(backendCart);
+            setCart(finalCart);
+            persistCartForUser(finalCart);
+          } else {
+            // Item not found after sync, keep optimistic update
+            console.warn('Item not found after sync, keeping optimistic update');
+          }
+        } catch (syncError) {
+          console.error('Error syncing cart before update:', syncError);
+          // Keep optimistic update if sync fails
+        }
         return;
       }
 
       const backendCart = await CartAPI.updateCartItem(cartItem.id, quantity);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       setCart(frontendCart);
-      
-      // Update localStorage
       persistCartForUser(frontendCart);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating cart item:', error);
-      // Fallback to localStorage update
-      setCart((prevCart) => {
-        const newCart = prevCart.map((item) =>
-          item.menuId === menuId ? { ...item, quantity } : item
-        );
-        localStorage.setItem('foodCart', JSON.stringify(newCart));
-        return newCart;
-      });
+      // Rollback optimistic update
+      setCart(previousCart);
+      persistCartForUser(previousCart);
+      
+      const errorMessage = error?.response?.data?.message || 
+                          error?.message || 
+                          'Gagal mengupdate jumlah item';
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }

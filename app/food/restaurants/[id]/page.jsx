@@ -52,8 +52,11 @@ export default function RestaurantDetailPage() {
     setIsAddingToCart(menu.id);
     try {
       // Check if cart has items from different restaurant
+      // Ensure type consistency (both should be numbers)
       const currentRestaurantId = getRestaurantId();
-      if (currentRestaurantId && currentRestaurantId !== restaurant.id) {
+      const newRestaurantId = Number(restaurant.id);
+      
+      if (currentRestaurantId !== null && Number(currentRestaurantId) !== newRestaurantId) {
         if (!confirm('Keranjang Anda berisi item dari restaurant lain. Ingin mengganti?')) {
           setIsAddingToCart(null);
           return;
