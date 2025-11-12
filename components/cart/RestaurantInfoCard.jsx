@@ -8,10 +8,10 @@ export default function RestaurantInfoCard({ restaurant, subtotal }) {
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
       <div className="flex items-center gap-4 mb-4">
         <img
-          src={restaurant?.image || '/placeholder.jpg'}
+          src={restaurant?.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E'}
           alt={restaurant?.name}
           className="w-16 h-16 rounded-lg object-cover"
-          onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+          onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E'; }}
         />
         <div className="flex-1">
           <h3 className="font-bold text-gray-900 mb-1">{restaurant?.name || 'Restaurant'}</h3>

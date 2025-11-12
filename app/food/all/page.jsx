@@ -196,11 +196,11 @@ export default function AllFoodPage() {
                     >
                       <div className="relative">
                         <img
-                        src={restaurant.image || '/placeholder.jpg'}
+                        src={restaurant.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="192"%3E%3Crect width="400" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'}
                         alt={restaurant.name}
                           className="w-full h-48 object-cover"
                           onError={(e) => {
-                          e.target.src = '/placeholder.jpg';
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="192"%3E%3Crect width="400" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E';
                           }}
                         />
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">

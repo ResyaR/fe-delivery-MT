@@ -83,12 +83,12 @@ export default function MTTransFoodPartners() {
                 className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-xl group cursor-pointer"
               >
                 <img
-                  src={restaurant.image || '/restaurant-placeholder.jpg'}
+                  src={restaurant.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="224"%3E%3Crect width="400" height="224" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="48"%3E%3F%3C/text%3E%3C/svg%3E'}
                   alt={restaurant.name}
                   className="w-full h-56 object-cover"
                   loading="lazy"
                   onError={(e) => {
-                    e.target.src = '/restaurant-placeholder.jpg';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="224"%3E%3Crect width="400" height="224" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="48"%3E%3F%3C/text%3E%3C/svg%3E';
                   }}
                 />
                 <div className="p-6">

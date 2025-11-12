@@ -200,10 +200,10 @@ export default function CheckoutPage() {
                       <div key={item.menuId} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                         <div className="flex items-center gap-3">
                           <img
-                            src={item.image || '/placeholder.jpg'}
+                            src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E'}
                             alt={item.menuName}
                             className="w-16 h-16 object-cover rounded-lg"
-                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                            onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E'; }}
                           />
                           <div>
                             <p className="font-medium text-gray-900">{item.menuName}</p>

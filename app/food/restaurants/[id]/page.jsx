@@ -142,10 +142,10 @@ export default function RestaurantDetailPage() {
                 
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <img
-                    src={restaurant.image || '/placeholder.jpg'}
+                    src={restaurant.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="256" height="192"%3E%3Crect width="256" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'}
                     alt={restaurant.name}
                     className="w-full md:w-64 h-48 object-cover rounded-2xl shadow-lg"
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="256" height="192"%3E%3Crect width="256" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'; }}
                   />
                   <div className="flex-1">
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
@@ -214,10 +214,10 @@ export default function RestaurantDetailPage() {
                       >
                         <div className="relative">
                           <img
-                            src={menu.image || '/placeholder.jpg'}
+                            src={menu.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="192"%3E%3Crect width="400" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'}
                             alt={menu.name}
                             className="w-full h-48 object-cover"
-                            onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                            onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="192"%3E%3Crect width="400" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'; }}
                           />
                           <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
                             <span className="text-xs font-semibold text-gray-700">{menu.category}</span>

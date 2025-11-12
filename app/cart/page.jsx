@@ -193,7 +193,7 @@ export default function CartPage() {
                 <RestaurantInfoCard 
                   restaurant={cart[0] ? {
                     name: cart[0].restaurantName,
-                    image: '/placeholder.jpg',
+                    image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E',
                     rating: 4.8,
                     category: 'Food',
                     openingTime: '10:00',
@@ -264,11 +264,11 @@ export default function CartPage() {
                     {cart.map((item) => (
                       <div key={item.menuId} className="p-4 flex gap-4">
                         <img
-                          src={item.image || '/placeholder.jpg'}
+                          src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'}
                           alt={item.menuName}
                           className="w-24 h-24 object-cover rounded-lg"
                           loading="lazy"
-                          onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                          onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'; }}
                         />
                         <div className="flex-1">
                           <h3 className="font-bold text-gray-900 mb-1">{item.menuName}</h3>

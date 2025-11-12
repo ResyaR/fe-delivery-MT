@@ -117,11 +117,11 @@ export default function SearchBar({ onSearch, className = "" }) {
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
               >
                 <img
-                  src={restaurant.image || '/restaurant-placeholder.jpg'}
+                  src={restaurant.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48"%3E%3Crect width="48" height="48" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="20"%3E%3F%3C/text%3E%3C/svg%3E'}
                   alt={restaurant.name}
                   className="w-12 h-12 rounded-lg object-cover"
                   onError={(e) => {
-                    e.target.src = '/restaurant-placeholder.jpg';
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="48" height="48"%3E%3Crect width="48" height="48" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="20"%3E%3F%3C/text%3E%3C/svg%3E';
                   }}
                 />
                 <div className="flex-1">
