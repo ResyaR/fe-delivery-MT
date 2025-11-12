@@ -39,6 +39,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncCartRef = useRef<(() => Promise<void>) | null>(null);
   const operationInProgressRef = useRef(false); // Guard untuk mencegah sync saat operasi berjalan
+  const isAddingToCartRef = useRef(false); // Guard untuk mencegah multiple concurrent add operations
 
   // Removed localStorage persistence - it was causing errors
   // Cart state is now managed purely through backend and React state
@@ -146,8 +147,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Set flag untuk mencegah sync saat operasi berjalan
+    // Prevent multiple concurrent add operations
+    if (isAddingToCartRef.current) {
+      console.warn('Add to cart operation already in progress, skipping...');
+      return;
+    }
+
+    // Set flags untuk mencegah sync dan multiple concurrent operations
     operationInProgressRef.current = true;
+    isAddingToCartRef.current = true;
 
     // Optimistic UI: update immediately
     const previousCart = [...cart];
@@ -167,17 +175,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       
-      // Update dengan data dari backend
-      if (frontendCart.length > 0) {
-        setCart(frontendCart);
-      } else {
-        // Jika backend return empty, keep optimistic update
-        console.warn('Backend returned empty cart, keeping optimistic update');
-      }
+      // Update dengan data dari backend (selalu gunakan data dari backend sebagai source of truth)
+      setCart(frontendCart);
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
-      // Rollback optimistic update
-      setCart(previousCart);
+      
+      // Jika error 500, kemungkinan ada race condition di backend
+      // Sync cart untuk mendapatkan state terbaru (mungkin item sudah berhasil ditambahkan)
+      if (error?.response?.status === 500) {
+        console.warn('Server error (500) during add to cart, syncing cart to get latest state...');
+        try {
+          const backendCart = await CartAPI.getCart();
+          const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
+          setCart(frontendCart);
+          // Don't throw error if sync succeeds - item might have been added successfully
+          return;
+        } catch (syncError) {
+          console.error('Error syncing cart after 500 error:', syncError);
+          // If sync fails, rollback optimistic update
+          setCart(previousCart);
+        }
+      } else {
+        // Untuk error selain 500, rollback optimistic update
+        setCart(previousCart);
+      }
       
       // Surface all errors with proper messages
       const errorMessage = error?.response?.data?.message || 
@@ -185,8 +206,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                           'Gagal menambahkan item ke keranjang';
       throw new Error(errorMessage);
     } finally {
-      // Clear flag setelah operasi selesai
+      // Clear flags setelah operasi selesai
       operationInProgressRef.current = false;
+      isAddingToCartRef.current = false;
     }
   };
 
