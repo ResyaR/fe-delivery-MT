@@ -40,28 +40,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const syncCartRef = useRef<(() => Promise<void>) | null>(null);
   const operationInProgressRef = useRef(false); // Guard untuk mencegah sync saat operasi berjalan
 
-  const getUserSnapshotKey = (userEmail?: string | null) =>
-    userEmail ? `foodCart:${userEmail}` : null;
-
-  const persistCartForUser = (items: CartItem[]) => {
-    // Persist general fallback
-    if (items.length > 0) {
-      localStorage.setItem('foodCart', JSON.stringify(items));
-    } else {
-      localStorage.removeItem('foodCart');
-    }
-    // Persist per-user snapshot to avoid flicker and stale hydration
-    try {
-      const snapshotKey = getUserSnapshotKey(user?.email || null);
-      if (snapshotKey) {
-        if (items.length > 0) {
-          sessionStorage.setItem(snapshotKey, JSON.stringify(items));
-        } else {
-          sessionStorage.removeItem(snapshotKey);
-        }
-      }
-    } catch {}
-  };
+  // Removed localStorage persistence - it was causing errors
+  // Cart state is now managed purely through backend and React state
 
   // Convert backend cart response to frontend cart items
   const convertBackendCartToFrontend = (backendCart: CartResponse, restaurantNameOverride?: string): CartItem[] => {
@@ -101,35 +81,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Hanya update jika tidak ada operasi yang sedang berjalan
       if (!operationInProgressRef.current) {
         setCart(frontendCart);
-        // Save to localStorage as backup (only after successful backend sync)
-        persistCartForUser(frontendCart);
       }
     } catch (error) {
       console.error('Error syncing cart from backend:', error);
-      // Only fallback to localStorage if backend fails AND user is logged in
-      // This ensures we don't use stale cart data from previous user
+      // No localStorage fallback - just clear cart if sync fails
       if (user && !operationInProgressRef.current) {
-        const savedCart = localStorage.getItem('foodCart');
-        if (savedCart) {
-          try {
-            const parsedCart = JSON.parse(savedCart);
-            // Only use localStorage if it seems valid (has items with menuId)
-            if (Array.isArray(parsedCart) && parsedCart.length > 0 && parsedCart[0].menuId) {
-              console.warn('Using localStorage cart as fallback (backend sync failed)');
-              setCart(parsedCart);
-            } else {
-              console.warn('localStorage cart seems invalid, clearing it');
-              localStorage.removeItem('foodCart');
-              setCart([]);
-            }
-          } catch (parseError) {
-            console.error('Error parsing saved cart:', parseError);
-            setCart([]);
-            localStorage.removeItem('foodCart');
-          }
-        } else {
-          setCart([]);
-        }
+        setCart([]);
       }
     } finally {
       setIsSyncing(false);
@@ -146,41 +103,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     
     // If user changed (including initial login or logout)
     if (lastUserId !== currentUserId) {
-      if (currentUserId !== null) {
-        // User logged in
-        // 1) Try hydrate from per-user session snapshot for instant UI (avoids empty flicker)
-        try {
-          const snapshotKey = getUserSnapshotKey(currentUserId);
-          if (snapshotKey) {
-            const snapshot = sessionStorage.getItem(snapshotKey);
-            if (snapshot) {
-              const parsed = JSON.parse(snapshot);
-              if (Array.isArray(parsed)) {
-                setCart(parsed);
-              }
-            }
-          }
-        } catch {}
-
-        // 2) Clear cross-user localStorage to avoid stale data mixing
-        localStorage.removeItem('foodCart');
-      } else {
-        // User logged out - clear everything
+      if (currentUserId === null) {
+        // User logged out - clear cart
         console.log('User logged out, clearing cart');
         setCart([]);
-        localStorage.removeItem('foodCart');
-        try {
-          // Optionally clear all per-user snapshots on logout
-          // If you want to retain last state per user for same-session relogin, comment this block
-          const keysToRemove: string[] = [];
-          for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && key.startsWith('foodCart:')) {
-              keysToRemove.push(key);
-            }
-          }
-          keysToRemove.forEach((k) => sessionStorage.removeItem(k));
-        } catch {}
       }
       
       // Update last user ID
@@ -206,18 +132,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = async (item: Omit<CartItem, 'quantity' | 'id'>) => {
     if (!user) {
-      // If no user, use localStorage only (fallback)
+      // If no user, just update local state (no persistence)
       setCart((prevCart) => {
         const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
-        const newCart = existingItem
+        return existingItem
           ? prevCart.map((cartItem) =>
               cartItem.menuId === item.menuId
                 ? { ...cartItem, quantity: cartItem.quantity + 1 }
                 : cartItem
             )
           : [...prevCart, { ...item, quantity: 1 }];
-        persistCartForUser(newCart);
-        return newCart;
       });
       return;
     }
@@ -238,17 +162,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         : [...cart, { ...item, quantity: 1 }];
     })();
     setCart(optimisticCart);
-    persistCartForUser(optimisticCart);
 
     try {
       const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       
-      // Merge dengan optimistic update untuk menghindari flicker
-      // Pastikan semua item dari backend ada, tapi jangan replace jika ada perbedaan kecil
+      // Update dengan data dari backend
       if (frontendCart.length > 0) {
         setCart(frontendCart);
-        persistCartForUser(frontendCart);
       } else {
         // Jika backend return empty, keep optimistic update
         console.warn('Backend returned empty cart, keeping optimistic update');
@@ -257,7 +178,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error adding item to cart:', error);
       // Rollback optimistic update
       setCart(previousCart);
-      persistCartForUser(previousCart);
       
       // Surface all errors with proper messages
       const errorMessage = error?.response?.data?.message || 
@@ -272,12 +192,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const removeFromCart = async (menuId: number) => {
     if (!user) {
-      // If no user, use localStorage only
-      setCart((prevCart) => {
-        const newCart = prevCart.filter((item) => item.menuId !== menuId);
-        persistCartForUser(newCart);
-        return newCart;
-      });
+      // If no user, just update local state (no persistence)
+      setCart((prevCart) => prevCart.filter((item) => item.menuId !== menuId));
       return;
     }
 
@@ -298,7 +214,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const previousCart = [...cart];
     const optimisticCart = cart.filter((item) => item.menuId !== menuId);
     setCart(optimisticCart);
-    persistCartForUser(optimisticCart);
 
     try {
       // If cart item doesn't have ID, sync first to get proper IDs
@@ -325,7 +240,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             } else {
               // Backend return data yang valid, update dengan data dari backend
               setCart(finalCart);
-              persistCartForUser(finalCart);
             }
           } else {
             // Item not found after sync, keep optimistic update
@@ -352,13 +266,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Backend return data yang valid, update dengan data dari backend
         setCart(frontendCart);
-        persistCartForUser(frontendCart);
       }
     } catch (error: any) {
       console.error('Error removing item from cart:', error);
       // Rollback optimistic change
       setCart(previousCart);
-      persistCartForUser(previousCart);
       
       const errorMessage = error?.response?.data?.message || 
                           error?.message || 
@@ -377,14 +289,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (!user) {
-      // If no user, use localStorage only
-      setCart((prevCart) => {
-        const newCart = prevCart.map((item) =>
+      // If no user, just update local state (no persistence)
+      setCart((prevCart) =>
+        prevCart.map((item) =>
           item.menuId === menuId ? { ...item, quantity } : item
-        );
-        persistCartForUser(newCart);
-        return newCart;
-      });
+        )
+      );
       return;
     }
 
@@ -398,7 +308,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       item.menuId === menuId ? { ...item, quantity } : item
     );
     setCart(optimisticCart);
-    persistCartForUser(optimisticCart);
 
     try {
       // Find cart item ID dari previousCart (sebelum optimistic update)
@@ -420,7 +329,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             const backendCart = await CartAPI.updateCartItem(updatedCartItem.id, quantity);
             const finalCart = convertBackendCartToFrontend(backendCart);
             setCart(finalCart);
-            persistCartForUser(finalCart);
           } else {
             // Item not found after sync, keep optimistic update
             console.warn('Item not found after sync, keeping optimistic update');
@@ -438,7 +346,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Update dengan data dari backend
       if (frontendCart.length > 0) {
         setCart(frontendCart);
-        persistCartForUser(frontendCart);
       } else {
         // Jika backend return empty, keep optimistic update
         console.warn('Backend returned empty cart, keeping optimistic update');
@@ -447,7 +354,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error updating cart item:', error);
       // Rollback optimistic update
       setCart(previousCart);
-      persistCartForUser(previousCart);
       
       const errorMessage = error?.response?.data?.message || 
                           error?.message || 
@@ -462,9 +368,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = async () => {
     if (!user) {
-      // If no user, just clear localStorage
+      // If no user, just clear local state
       setCart([]);
-      localStorage.removeItem('foodCart');
       return;
     }
 
@@ -475,7 +380,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Optimistic clear
     const previousCart = [...cart];
     setCart([]);
-    persistCartForUser([]);
 
     try {
       await CartAPI.clearCart();
@@ -484,7 +388,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error clearing cart:', error);
       // Rollback jika clear gagal
       setCart(previousCart);
-      persistCartForUser(previousCart);
       throw error;
     } finally {
       setIsLoading(false);
