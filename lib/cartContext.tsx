@@ -316,8 +316,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             // Now remove with proper ID
             const removedCart = await CartAPI.removeItemFromCart(updatedCartItem.id);
             const finalCart = convertBackendCartToFrontend(removedCart);
-            setCart(finalCart);
-            persistCartForUser(finalCart);
+            
+            // Jika backend return empty array padahal optimistic masih ada item lain, 
+            // kemungkinan ada masalah dengan backend response - keep optimistic update
+            if (finalCart.length === 0 && optimisticCart.length > 0) {
+              console.warn('Backend returned empty cart after removal (with sync), but optimistic cart still has items. Keeping optimistic update.');
+              // Tetap update dengan optimistic cart (sudah di-set sebelumnya)
+            } else {
+              // Backend return data yang valid, update dengan data dari backend
+              setCart(finalCart);
+              persistCartForUser(finalCart);
+            }
           } else {
             // Item not found after sync, keep optimistic update
             console.warn('Item not found after sync, keeping optimistic removal');
@@ -333,8 +342,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const frontendCart = convertBackendCartToFrontend(backendCart);
       
       // Update dengan data dari backend
-      setCart(frontendCart);
-      persistCartForUser(frontendCart);
+      // Jika backend return empty array padahal optimistic masih ada item lain, 
+      // kemungkinan ada masalah dengan backend response - keep optimistic update
+      if (frontendCart.length === 0 && optimisticCart.length > 0) {
+        // Backend return empty tapi optimistic masih ada item, keep optimistic
+        // Ini bisa terjadi jika ada delay atau race condition di backend
+        console.warn('Backend returned empty cart after removal, but optimistic cart still has items. Keeping optimistic update.');
+        // Tetap update dengan optimistic cart (sudah di-set sebelumnya)
+      } else {
+        // Backend return data yang valid, update dengan data dari backend
+        setCart(frontendCart);
+        persistCartForUser(frontendCart);
+      }
     } catch (error: any) {
       console.error('Error removing item from cart:', error);
       // Rollback optimistic change
