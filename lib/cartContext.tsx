@@ -39,6 +39,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncCartRef = useRef<(() => Promise<void>) | null>(null);
   const operationInProgressRef = useRef(false); // Guard untuk mencegah sync saat operasi berjalan
+  const addingItemsRef = useRef<Set<number>>(new Set()); // Per-item lock untuk add to cart (by menuId)
   const updatingItemsRef = useRef<Set<number>>(new Set()); // Per-item lock untuk update quantity
   const removingItemsRef = useRef<Set<number>>(new Set()); // Per-item lock untuk remove
 
@@ -148,12 +149,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // GUARD: Prevent concurrent operations
-    if (operationInProgressRef.current) {
-      console.warn('Add to cart operation already in progress, skipping...');
+    // GUARD: Cek apakah item ini sedang ditambahkan (per-item lock)
+    if (addingItemsRef.current.has(item.menuId)) {
+      console.warn(`Item ${item.menuId} is already being added to cart, skipping...`);
       return;
     }
 
+    addingItemsRef.current.add(item.menuId);
     operationInProgressRef.current = true;
 
     // Gunakan functional update untuk mendapatkan state terbaru dan optimistic update
@@ -206,7 +208,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                           'Gagal menambahkan item ke keranjang';
       throw new Error(errorMessage);
     } finally {
-      // Clear flag setelah operasi selesai
+      // Clear flag setelah operasi selesai (selalu clear, bahkan jika error)
+      addingItemsRef.current.delete(item.menuId);
       operationInProgressRef.current = false;
     }
   };
