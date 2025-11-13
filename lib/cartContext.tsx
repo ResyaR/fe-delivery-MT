@@ -151,12 +151,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // GUARD: Cek apakah item ini sedang ditambahkan (per-item lock)
     if (addingItemsRef.current.has(item.menuId)) {
-      console.warn(`Item ${item.menuId} is already being added to cart, skipping...`);
+      // Jangan log warning untuk setiap skip, ini normal behavior
       return;
     }
 
     addingItemsRef.current.add(item.menuId);
     operationInProgressRef.current = true;
+    
+    // Safety timeout: auto-clear flag setelah 10 detik (jika operasi terlalu lama)
+    const timeoutId = setTimeout(() => {
+      if (addingItemsRef.current.has(item.menuId)) {
+        console.warn(`Auto-clearing add lock for item ${item.menuId} after timeout`);
+        addingItemsRef.current.delete(item.menuId);
+        operationInProgressRef.current = false;
+      }
+    }, 10000);
 
     // Check restaurant sebelum optimistic update (seperti Gojek/Grab)
     let previousCart: CartItem[] = [];
@@ -231,9 +240,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Handle error 500 - retry dengan sync cart dulu (masalah backend cartId null)
       if (isServerError) {
         console.log('Server error (500) detected, syncing cart and retrying...');
-        // Clear flag dulu agar bisa retry
-        addingItemsRef.current.delete(item.menuId);
-        operationInProgressRef.current = false;
+        // JANGAN clear flag di sini, biarkan finally block yang handle
         
         // Sync cart dulu untuk pastikan state konsisten
         try {
@@ -245,26 +252,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           // Cek apakah item sudah ada di cart setelah sync
           const existingItem = syncedFrontendCart.find((cartItem) => cartItem.menuId === item.menuId);
           if (existingItem) {
-            // Item sudah ada, tidak perlu add lagi
+            // Item sudah ada, tidak perlu add lagi - flag akan di-clear di finally
             return;
           }
           
-          // Retry add item dengan flag baru
-          addingItemsRef.current.add(item.menuId);
-          operationInProgressRef.current = true;
-          
+          // Retry add item (flag masih aktif dari awal, tidak perlu set lagi)
           const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
           const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
           setCart(frontendCart);
           
-          addingItemsRef.current.delete(item.menuId);
-          operationInProgressRef.current = false;
+          // Success, flag akan di-clear di finally
           return;
         } catch (retryError: any) {
           console.error('Error retrying after 500 error:', retryError);
           setCart(previousCart);
-          addingItemsRef.current.delete(item.menuId);
-          operationInProgressRef.current = false;
+          // Flag akan di-clear di finally
           throw new Error(retryError?.response?.data?.message || retryError?.message || 'Gagal menambahkan item ke keranjang');
         }
       }
@@ -276,30 +278,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           await CartAPI.clearCart();
           setCart([]);
           
-          // Retry adding item
+          // Retry adding item (flag masih aktif dari awal)
           const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
           const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
           setCart(frontendCart);
           
-          // Success, exit early
-          addingItemsRef.current.delete(item.menuId);
-          operationInProgressRef.current = false;
+          // Success, flag akan di-clear di finally
           return;
         } catch (retryError: any) {
           console.error('Error retrying after clear cart:', retryError);
           setCart(previousCart);
-          addingItemsRef.current.delete(item.menuId);
-          operationInProgressRef.current = false;
+          // Flag akan di-clear di finally
           throw new Error(retryError?.response?.data?.message || retryError?.message || 'Gagal menambahkan item ke keranjang');
         }
       }
       
       // Rollback untuk error lain
       setCart(previousCart);
-      addingItemsRef.current.delete(item.menuId);
-      operationInProgressRef.current = false;
+      // Flag akan di-clear di finally
       throw new Error(errorMessage || 'Gagal menambahkan item ke keranjang');
     } finally {
+      // Clear timeout
+      clearTimeout(timeoutId);
+      
       // Pastikan flag selalu di-clear (fallback)
       if (addingItemsRef.current.has(item.menuId)) {
         addingItemsRef.current.delete(item.menuId);
