@@ -20,6 +20,10 @@ export default function CartPage() {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(15000);
   const [estimatedTime, setEstimatedTime] = useState('30-45 menit');
+  const [deliveryType, setDeliveryType] = useState('regular'); // regular, express, scheduled
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [scheduleTimeSlot, setScheduleTimeSlot] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -138,12 +142,31 @@ export default function CartPage() {
 
   const handleSelectAddress = (address) => {
     setSelectedAddress(address);
-    // In real app, calculate delivery fee based on distance
-    // For now, just randomize for demo
-    const randomFee = Math.floor(Math.random() * (25000 - 10000) + 10000);
-    setDeliveryFee(randomFee);
-    setEstimatedTime(`${Math.floor(Math.random() * (60 - 30) + 30)}-${Math.floor(Math.random() * (75 - 45) + 45)} menit`);
+    // Calculate delivery fee based on zone
+    const baseFee = 15000;
+    const zoneMultiplier = address.zone ? address.zone * 2000 : 1; // Zone 1 = 2000, Zone 2 = 4000, etc
+    setDeliveryFee(baseFee + zoneMultiplier);
+    
+    // Calculate estimated time based on zone
+    const baseTime = 30;
+    const zoneTime = address.zone ? address.zone * 5 : 0;
+    setEstimatedTime(`${baseTime + zoneTime}-${baseTime + zoneTime + 15} menit`);
   };
+
+  // Update delivery fee when delivery type changes
+  useEffect(() => {
+    if (selectedAddress) {
+      const baseFee = 15000;
+      const zoneMultiplier = selectedAddress.zone ? selectedAddress.zone * 2000 : 0;
+      let fee = baseFee + zoneMultiplier;
+      
+      if (deliveryType === 'express') {
+        fee = fee * 1.5; // Express is 50% more expensive
+      }
+      
+      setDeliveryFee(fee);
+    }
+  }, [deliveryType, selectedAddress]);
 
   if (loading) {
     return (
@@ -354,6 +377,104 @@ export default function CartPage() {
                   );
                 })}
 
+                {/* Delivery Type & Schedule Section */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Jenis Pengiriman</h2>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => {
+                          setDeliveryType('regular');
+                          setScheduledDate('');
+                          setScheduledTime('');
+                          setScheduleTimeSlot('');
+                        }}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          deliveryType === 'regular'
+                            ? 'border-[#E00000] bg-red-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-900 mb-1">Regular</div>
+                        <div className="text-sm text-gray-600">30-45 menit</div>
+                        <div className="text-xs text-gray-500 mt-1">Standar</div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setDeliveryType('express');
+                          setScheduledDate('');
+                          setScheduledTime('');
+                          setScheduleTimeSlot('');
+                        }}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          deliveryType === 'express'
+                            ? 'border-[#E00000] bg-red-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-900 mb-1">Express</div>
+                        <div className="text-sm text-gray-600">15-25 menit</div>
+                        <div className="text-xs text-gray-500 mt-1">+50% ongkir</div>
+                      </button>
+
+                      <button
+                        onClick={() => setDeliveryType('scheduled')}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          deliveryType === 'scheduled'
+                            ? 'border-[#E00000] bg-red-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-900 mb-1">Jadwal</div>
+                        <div className="text-sm text-gray-600">Pilih waktu</div>
+                        <div className="text-xs text-gray-500 mt-1">Fleksibel</div>
+                      </button>
+                    </div>
+
+                    {deliveryType === 'scheduled' && (
+                      <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Tanggal Pengiriman *
+                          </label>
+                          <input
+                            type="date"
+                            value={scheduledDate}
+                            onChange={(e) => setScheduledDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Waktu Pengiriman *
+                          </label>
+                          <select
+                            value={scheduleTimeSlot}
+                            onChange={(e) => {
+                              setScheduleTimeSlot(e.target.value);
+                              const [start, end] = e.target.value.split('-');
+                              setScheduledTime(start);
+                            }}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                            required
+                          >
+                            <option value="">Pilih waktu</option>
+                            <option value="09:00-12:00">09:00 - 12:00</option>
+                            <option value="12:00-15:00">12:00 - 15:00</option>
+                            <option value="15:00-18:00">15:00 - 18:00</option>
+                            <option value="18:00-21:00">18:00 - 21:00</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Notes Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Catatan</h2>
@@ -468,8 +589,31 @@ export default function CartPage() {
                   </div>
 
                   <button
-                    onClick={() => router.push('/checkout')}
-                    disabled={!selectedAddress}
+                    onClick={() => {
+                      if (!selectedAddress) return;
+                      
+                      // Validate scheduled delivery
+                      if (deliveryType === 'scheduled' && (!scheduledDate || !scheduleTimeSlot)) {
+                        alert('Pilih tanggal dan waktu pengiriman terlebih dahulu');
+                        return;
+                      }
+                      
+                      // Save delivery data to localStorage
+                      const deliveryData = {
+                        deliveryType,
+                        scheduledDate,
+                        scheduledTime,
+                        scheduleTimeSlot,
+                        deliveryFee,
+                        restaurantNotes,
+                        driverNotes,
+                        address: selectedAddress,
+                      };
+                      localStorage.setItem('checkout_delivery_data', JSON.stringify(deliveryData));
+                      
+                      router.push('/checkout');
+                    }}
+                    disabled={!selectedAddress || (deliveryType === 'scheduled' && (!scheduledDate || !scheduleTimeSlot))}
                     className="w-full bg-[#E00000] text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {selectedAddress ? 'Lanjut ke Pembayaran' : 'Pilih Alamat Dulu'}

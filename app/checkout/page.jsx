@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const { cart, getTotalPrice, clearCart, getRestaurantId } = useCart();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveryData, setDeliveryData] = useState(null);
   const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -28,6 +29,24 @@ export default function CheckoutPage() {
     if (!loading && cart.length === 0) {
       router.push('/cart');
     }
+    
+    // Load delivery data from localStorage
+    const savedDeliveryData = localStorage.getItem('checkout_delivery_data');
+    if (savedDeliveryData) {
+      try {
+        const data = JSON.parse(savedDeliveryData);
+        setDeliveryData(data);
+        if (data.address) {
+          setFormData(prev => ({
+            ...prev,
+            deliveryAddress: `${data.address.street}, ${data.address.city}, ${data.address.province} ${data.address.postalCode || ''}`.trim(),
+          }));
+        }
+      } catch (error) {
+        console.error('Error parsing delivery data:', error);
+      }
+    }
+    
     if (user) {
       setFormData(prev => ({
         ...prev,
@@ -53,6 +72,12 @@ export default function CheckoutPage() {
     try {
       setIsSubmitting(true);
       
+      if (!deliveryData || !deliveryData.address || !deliveryData.address.zone) {
+        alert('Data pengiriman tidak lengkap. Silakan kembali ke halaman cart.');
+        router.push('/cart');
+        return;
+      }
+
       const orderData = {
         restaurantId: getRestaurantId(),
         items: cart.map(item => ({
@@ -61,14 +86,25 @@ export default function CheckoutPage() {
           price: item.price,
           quantity: item.quantity,
         })),
-        deliveryAddress: formData.deliveryAddress,
-        notes: formData.notes,
+        deliveryAddress: deliveryData.address.street,
+        deliveryCity: deliveryData.address.city,
+        deliveryProvince: deliveryData.address.province,
+        deliveryPostalCode: deliveryData.address.postalCode || '',
+        deliveryZone: deliveryData.address.zone,
+        deliveryType: deliveryData.deliveryType || 'regular',
+        scheduledDate: deliveryData.scheduledDate || undefined,
+        scheduledTime: deliveryData.scheduledTime || undefined,
+        scheduleTimeSlot: deliveryData.scheduleTimeSlot || undefined,
+        notes: `${formData.notes || ''}${deliveryData.restaurantNotes ? `\nCatatan Restaurant: ${deliveryData.restaurantNotes}` : ''}${deliveryData.driverNotes ? `\nCatatan Driver: ${deliveryData.driverNotes}` : ''}`.trim() || undefined,
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
-        deliveryFee: 10000,
+        deliveryFee: deliveryData.deliveryFee || 10000,
       };
 
       const result = await OrderAPI.createOrder(orderData);
+      
+      // Clear delivery data from localStorage
+      localStorage.removeItem('checkout_delivery_data');
       
       // Clear cart after successful order
       try {
@@ -100,7 +136,7 @@ export default function CheckoutPage() {
     return null;
   }
 
-  const deliveryFee = 10000;
+  const deliveryFee = deliveryData?.deliveryFee || 10000;
   const total = getTotalPrice() + deliveryFee;
 
   return (
