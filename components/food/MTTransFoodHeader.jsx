@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { useCart } from '@/lib/cartContext';
@@ -14,7 +14,10 @@ export default function MTTransFoodHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // Memoize totalItems untuk prevent recalculation dan flickering
+  const totalItems = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cart]);
 
   const handleSignInClick = () => {
     router.push('/signin');

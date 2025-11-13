@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useCart } from "@/lib/cartContext";
@@ -13,6 +13,11 @@ export default function RestaurantDetailPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { addToCart, cart, getRestaurantId, clearCart } = useCart();
+  
+  // Memoize total cart items untuk prevent recalculation dan flickering
+  const totalCartItems = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cart]);
   
   const [restaurant, setRestaurant] = useState(null);
   const [menus, setMenus] = useState([]);
@@ -275,13 +280,13 @@ export default function RestaurantDetailPage() {
       <MTTransFoodFooter />
 
       {/* Floating Cart Button */}
-      {cart.length > 0 && (
+      {totalCartItems > 0 && (
         <button
           onClick={() => router.push('/cart')}
           className="fixed bottom-6 right-6 bg-[#E00000] text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all z-40 flex items-center gap-2"
         >
           <span className="material-symbols-outlined">shopping_cart</span>
-          <span className="font-semibold">{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
+          <span className="font-semibold">{totalCartItems}</span>
         </button>
       )}
     </div>

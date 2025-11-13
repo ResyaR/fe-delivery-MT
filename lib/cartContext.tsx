@@ -39,6 +39,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncCartRef = useRef<(() => Promise<void>) | null>(null);
   const operationInProgressRef = useRef(false); // Guard untuk mencegah sync saat operasi berjalan
+  const updatingItemsRef = useRef<Set<number>>(new Set()); // Per-item lock untuk update quantity
+  const removingItemsRef = useRef<Set<number>>(new Set()); // Per-item lock untuk remove
 
   // Removed localStorage persistence - it was causing errors
   // Cart state is now managed purely through backend and React state
@@ -146,34 +148,53 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Set flag untuk mencegah sync saat operasi berjalan
+    // GUARD: Prevent concurrent operations
+    if (operationInProgressRef.current) {
+      console.warn('Add to cart operation already in progress, skipping...');
+      return;
+    }
+
     operationInProgressRef.current = true;
 
-    // Optimistic UI: update immediately
-    const previousCart = [...cart];
-    const optimisticCart = (() => {
-      const existingItem = cart.find((cartItem) => cartItem.menuId === item.menuId);
+    // Gunakan functional update untuk mendapatkan state terbaru dan optimistic update
+    let previousCart: CartItem[] = [];
+    setCart((prevCart) => {
+      previousCart = [...prevCart];
+      const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
+      // Optimistic update langsung di sini
       return existingItem
-        ? cart.map((cartItem) =>
+        ? prevCart.map((cartItem) =>
             cartItem.menuId === item.menuId
               ? { ...cartItem, quantity: cartItem.quantity + 1 }
               : cartItem
           )
-        : [...cart, { ...item, quantity: 1 }];
-    })();
-    setCart(optimisticCart);
+        : [...prevCart, { ...item, quantity: 1 }];
+    });
 
     try {
       const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       
-      // Update dengan data dari backend
-      if (frontendCart.length > 0) {
-        setCart(frontendCart);
-      } else {
-        // Jika backend return empty, keep optimistic update
-        console.warn('Backend returned empty cart, keeping optimistic update');
-      }
+      // Hanya update jika data berbeda (prevent unnecessary re-render)
+      setCart((prevCart) => {
+        // Compare untuk avoid unnecessary update
+        const prevTotal = prevCart.reduce((sum, item) => sum + item.quantity, 0);
+        const newTotal = frontendCart.reduce((sum, item) => sum + item.quantity, 0);
+        
+        // Jika total sama dan items sama, skip update untuk prevent flickering
+        if (prevTotal === newTotal && prevCart.length === frontendCart.length) {
+          const isSame = prevCart.every((prevItem, idx) => {
+            const newItem = frontendCart[idx];
+            return prevItem.menuId === newItem.menuId && 
+                   prevItem.quantity === newItem.quantity;
+          });
+          if (isSame) {
+            return prevCart; // Skip update, prevent re-render
+          }
+        }
+        
+        return frontendCart;
+      });
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
       // Rollback optimistic update
@@ -197,23 +218,32 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Set flag untuk mencegah sync saat operasi berjalan
+    // GUARD: Cek apakah item ini sedang dihapus
+    if (removingItemsRef.current.has(menuId)) {
+      console.warn(`Item ${menuId} is already being removed, skipping...`);
+      return;
+    }
+
+    removingItemsRef.current.add(menuId);
     operationInProgressRef.current = true;
 
-    // Find cart item first
-    const cartItem = cart.find((item) => item.menuId === menuId);
+    // Find cart item first menggunakan functional update untuk mendapatkan state terbaru
+    let cartItem: CartItem | undefined;
+    let previousCart: CartItem[] = [];
+    setCart((prevCart) => {
+      previousCart = [...prevCart];
+      cartItem = prevCart.find((item) => item.menuId === menuId);
+      // Optimistic removal langsung di sini
+      return prevCart.filter((item) => item.menuId !== menuId);
+    });
     
     // If item not found, nothing to remove
     if (!cartItem) {
       console.warn('Item not found in cart:', menuId);
+      removingItemsRef.current.delete(menuId);
       operationInProgressRef.current = false;
       return;
     }
-
-    // Optimistic removal - update UI immediately
-    const previousCart = [...cart];
-    const optimisticCart = cart.filter((item) => item.menuId !== menuId);
-    setCart(optimisticCart);
 
     try {
       // If cart item doesn't have ID, sync first to get proper IDs
@@ -296,6 +326,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       throw new Error(errorMessage);
     } finally {
       // Clear flag setelah operasi selesai
+      removingItemsRef.current.delete(menuId);
       operationInProgressRef.current = false;
     }
   };
@@ -316,21 +347,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Set flag untuk mencegah sync saat operasi berjalan
+    // GUARD: Cek apakah item ini sedang di-update
+    if (updatingItemsRef.current.has(menuId)) {
+      console.warn(`Item ${menuId} is already being updated, skipping...`);
+      return;
+    }
+
+    updatingItemsRef.current.add(menuId);
     operationInProgressRef.current = true;
     setIsLoading(true);
     
-    // Optimistic update - update UI immediately
-    const previousCart = [...cart];
-    const optimisticCart = cart.map((item) =>
-      item.menuId === menuId ? { ...item, quantity } : item
-    );
-    setCart(optimisticCart);
+    // Gunakan functional update untuk mendapatkan state terbaru dan optimistic update
+    let previousCart: CartItem[] = [];
+    let cartItem: CartItem | undefined;
+    setCart((prevCart) => {
+      previousCart = [...prevCart];
+      cartItem = prevCart.find((item) => item.menuId === menuId);
+      // Optimistic update langsung di sini
+      return prevCart.map((item) =>
+        item.menuId === menuId ? { ...item, quantity } : item
+      );
+    });
 
     try {
-      // Find cart item ID dari previousCart (sebelum optimistic update)
-      const cartItem = previousCart.find((item) => item.menuId === menuId);
-      
       if (!cartItem?.id) {
         // If no ID, sync first to get proper IDs
         console.warn('Cart item missing ID, syncing cart first...');
@@ -361,13 +400,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const backendCart = await CartAPI.updateCartItem(cartItem.id, quantity);
       const frontendCart = convertBackendCartToFrontend(backendCart);
       
-      // Update dengan data dari backend
-      if (frontendCart.length > 0) {
-        setCart(frontendCart);
-      } else {
-        // Jika backend return empty, keep optimistic update
-        console.warn('Backend returned empty cart, keeping optimistic update');
-      }
+      // Hanya update jika data berbeda (prevent unnecessary re-render)
+      setCart((prevCart) => {
+        const prevItem = prevCart.find((item) => item.menuId === menuId);
+        const newItem = frontendCart.find((item) => item.menuId === menuId);
+        
+        // Jika quantity sama, skip update untuk prevent flickering
+        if (prevItem && newItem && prevItem.quantity === newItem.quantity) {
+          return prevCart; // Skip update
+        }
+        
+        return frontendCart;
+      });
     } catch (error: any) {
       console.error('Error updating cart item:', error);
       // Rollback optimistic update
@@ -380,6 +424,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
       // Clear flag setelah operasi selesai
+      updatingItemsRef.current.delete(menuId);
       operationInProgressRef.current = false;
     }
   };

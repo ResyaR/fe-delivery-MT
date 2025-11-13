@@ -110,6 +110,12 @@ export default function CartPage() {
       await handleRemoveFromCart(menuId);
       return;
     }
+    
+    // GUARD: Prevent multiple rapid clicks
+    if (updatingItem === menuId) {
+      return; // Already updating, skip
+    }
+    
     setUpdatingItem(menuId);
     try {
       await updateQuantity(menuId, newQty);
@@ -117,7 +123,7 @@ export default function CartPage() {
       console.error('Error updating quantity:', error);
       alert(error.message || 'Gagal mengupdate jumlah item');
     } finally {
-      setTimeout(() => setUpdatingItem(null), 300);
+      setUpdatingItem(null);
     }
   };
 
