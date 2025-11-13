@@ -390,6 +390,7 @@ export default function MTTransMultiTabForm() {
         dropoffLocation: dropoffLocationCombined,
         scheduledDate: scheduledFormData.scheduledDate,
         scheduleTimeSlot: scheduledFormData.scheduleTimeSlot,
+        zone: selectedScheduledDest?.zone || undefined, // Add zone from selected destination city
         barang: scheduledFormData.itemName ? {
           itemName: scheduledFormData.itemName,
           scale: scheduledFormData.weight
@@ -569,6 +570,7 @@ export default function MTTransMultiTabForm() {
         length: parseFloat(paketBesarData.length),
         width: parseFloat(paketBesarData.width),
         height: parseFloat(paketBesarData.height),
+        zone: selectedPaketBesarDest?.zone || undefined, // Add zone from selected destination city
         category: paketBesarData.category || 'Lainnya',
         isFragile: paketBesarData.isFragile,
         requiresHelper: paketBesarData.requiresHelper,
