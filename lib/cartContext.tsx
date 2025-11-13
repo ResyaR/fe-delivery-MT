@@ -158,12 +158,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     addingItemsRef.current.add(item.menuId);
     operationInProgressRef.current = true;
 
-    // Gunakan functional update untuk mendapatkan state terbaru dan optimistic update
+    // Check restaurant sebelum optimistic update (seperti Gojek/Grab)
     let previousCart: CartItem[] = [];
+    let needsClearCart = false;
+    
     setCart((prevCart) => {
       previousCart = [...prevCart];
+      
+      // Check jika cart punya item dari restaurant berbeda
+      if (prevCart.length > 0) {
+        const currentRestaurantId = prevCart[0].restaurantId;
+        if (currentRestaurantId !== item.restaurantId) {
+          needsClearCart = true;
+          // Clear cart di UI dulu (optimistic) - seperti Gojek/Grab auto-replace
+          return [{ ...item, quantity: 1 }];
+        }
+      }
+      
+      // Normal flow: tambah item
       const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
-      // Optimistic update langsung di sini
       return existingItem
         ? prevCart.map((cartItem) =>
             cartItem.menuId === item.menuId
@@ -174,16 +187,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
 
     try {
+      // Jika perlu clear cart, clear dulu (seperti Gojek/Grab)
+      if (needsClearCart) {
+        try {
+          await CartAPI.clearCart();
+        } catch (clearError) {
+          console.error('Error clearing cart:', clearError);
+          // Continue anyway, backend will handle it
+        }
+      }
+
       const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
       const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
       
-      // Hanya update jika data berbeda (prevent unnecessary re-render)
+      // Update dengan data dari backend
       setCart((prevCart) => {
-        // Compare untuk avoid unnecessary update
         const prevTotal = prevCart.reduce((sum, item) => sum + item.quantity, 0);
         const newTotal = frontendCart.reduce((sum, item) => sum + item.quantity, 0);
         
-        // Jika total sama dan items sama, skip update untuk prevent flickering
         if (prevTotal === newTotal && prevCart.length === frontendCart.length) {
           const isSame = prevCart.every((prevItem, idx) => {
             const newItem = frontendCart[idx];
@@ -191,7 +212,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                    prevItem.quantity === newItem.quantity;
           });
           if (isSame) {
-            return prevCart; // Skip update, prevent re-render
+            return prevCart;
           }
         }
         
@@ -199,16 +220,40 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
-      // Rollback optimistic update
-      setCart(previousCart);
       
-      // Surface all errors with proper messages
-      const errorMessage = error?.response?.data?.message || 
-                          error?.message || 
-                          'Gagal menambahkan item ke keranjang';
-      throw new Error(errorMessage);
+      // Handle error "different restaurants" - auto clear and retry (fallback)
+      const errorMessage = error?.response?.data?.message || error?.message || '';
+      const isDifferentRestaurantError = error?.response?.status === 400 && 
+        (errorMessage.includes('different restaurants') || 
+         errorMessage.includes('different restaurant') ||
+         errorMessage.includes('Cannot add items from different restaurants'));
+      
+      if (isDifferentRestaurantError) {
+        console.log('Backend detected different restaurant, clearing and retrying...');
+        try {
+          await CartAPI.clearCart();
+          setCart([]);
+          
+          // Retry adding item
+          const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
+          const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
+          setCart(frontendCart);
+          
+          // Success, exit early
+          addingItemsRef.current.delete(item.menuId);
+          operationInProgressRef.current = false;
+          return;
+        } catch (retryError: any) {
+          console.error('Error retrying after clear cart:', retryError);
+          setCart(previousCart);
+          throw new Error(retryError?.response?.data?.message || retryError?.message || 'Gagal menambahkan item ke keranjang');
+        }
+      }
+      
+      // Rollback untuk error lain
+      setCart(previousCart);
+      throw new Error(errorMessage || 'Gagal menambahkan item ke keranjang');
     } finally {
-      // Clear flag setelah operasi selesai (selalu clear, bahkan jika error)
       addingItemsRef.current.delete(item.menuId);
       operationInProgressRef.current = false;
     }

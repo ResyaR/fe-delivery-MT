@@ -53,29 +53,21 @@ export default function RestaurantDetailPage() {
       return;
     }
 
-    // Tampilkan feedback singkat lalu lepas spinner segera (optimistic)
     setIsAddingToCart(menu.id);
+    
     try {
-      // Check if cart has items from different restaurant
-      // Ensure type consistency (both should be numbers)
+      // Check restaurant dan tampilkan notifikasi info jika berbeda (seperti Gojek/Grab)
       const currentRestaurantId = getRestaurantId();
       const newRestaurantId = Number(restaurant.id);
       
       if (currentRestaurantId !== null && Number(currentRestaurantId) !== newRestaurantId) {
-        if (!confirm('Keranjang Anda berisi item dari restaurant lain. Ingin mengganti?')) {
-          setIsAddingToCart(null);
-          return;
-        }
-        // Clear cart first if user wants to replace
-        try {
-          await clearCart();
-        } catch (clearError) {
-          console.error('Error clearing cart:', clearError);
-          // Continue anyway, backend will handle it
-        }
+        // Tampilkan notifikasi info (bukan confirm dialog yang mengganggu)
+        setNotificationMessage(`Keranjang diganti dengan item dari ${restaurant.name}`);
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 2000);
       }
 
-      // Jalankan addToCart tanpa await agar UI tidak menunggu respons server
+      // Jalankan addToCart - akan auto-handle clear cart jika perlu (seperti Gojek/Grab)
       const addPromise = addToCart({
         menuId: menu.id,
         menuName: menu.name,
@@ -85,13 +77,15 @@ export default function RestaurantDetailPage() {
         restaurantName: restaurant.name,
       });
 
-      // Beri notifikasi sukses langsung (optimistic)
-      setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
-      setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 1500);
-
-      // Tangani error backend di background (rollback sudah ditangani di context)
-      addPromise.catch((error) => {
+      // Beri notifikasi sukses setelah berhasil
+      addPromise.then(() => {
+        // Hanya tampilkan notifikasi sukses jika tidak ada notifikasi "diganti" sebelumnya
+        if (currentRestaurantId === null || Number(currentRestaurantId) === newRestaurantId) {
+          setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
+          setShowNotification(true);
+          setTimeout(() => setShowNotification(false), 1500);
+        }
+      }).catch((error) => {
         console.error('Error adding to cart:', error);
         const errorMessage = error?.message || error?.response?.data?.message || 'Gagal menambahkan ke keranjang';
         setNotificationMessage(errorMessage);
@@ -105,7 +99,6 @@ export default function RestaurantDetailPage() {
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
     } finally {
-      // Lepas spinner segera agar tombol tidak terasa “loading lama”
       setIsAddingToCart(null);
     }
   };
