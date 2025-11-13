@@ -12,7 +12,7 @@ export default function RestaurantDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { addToCart, cart, getRestaurantId, clearCart } = useCart();
+  const { addToCart, cart } = useCart();
   
   // Memoize total cart items untuk prevent recalculation dan flickering
   const totalCartItems = useMemo(() => {
@@ -56,18 +56,7 @@ export default function RestaurantDetailPage() {
     setIsAddingToCart(menu.id);
     
     try {
-      // Check restaurant dan tampilkan notifikasi info jika berbeda (seperti Gojek/Grab)
-      const currentRestaurantId = getRestaurantId();
-      const newRestaurantId = Number(restaurant.id);
-      
-      if (currentRestaurantId !== null && Number(currentRestaurantId) !== newRestaurantId) {
-        // Tampilkan notifikasi info (bukan confirm dialog yang mengganggu)
-        setNotificationMessage(`Keranjang diganti dengan item dari ${restaurant.name}`);
-        setShowNotification(true);
-        setTimeout(() => setShowNotification(false), 2000);
-      }
-
-      // Jalankan addToCart - akan auto-handle clear cart jika perlu (seperti Gojek/Grab)
+      // Jalankan addToCart - semua item dari berbagai restaurant bisa ditambahkan ke cart yang sama
       const addPromise = addToCart({
         menuId: menu.id,
         menuName: menu.name,
@@ -79,12 +68,9 @@ export default function RestaurantDetailPage() {
 
       // Beri notifikasi sukses setelah berhasil
       addPromise.then(() => {
-        // Hanya tampilkan notifikasi sukses jika tidak ada notifikasi "diganti" sebelumnya
-        if (currentRestaurantId === null || Number(currentRestaurantId) === newRestaurantId) {
-          setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
-          setShowNotification(true);
-          setTimeout(() => setShowNotification(false), 1500);
-        }
+        setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 1500);
       }).catch((error) => {
         console.error('Error adding to cart:', error);
         const errorMessage = error?.message || error?.response?.data?.message || 'Gagal menambahkan ke keranjang';

@@ -85,15 +85,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
     setCart((prevCart) => {
-      // Check jika cart punya item dari restaurant berbeda (Gojek/Grab style)
-      if (prevCart.length > 0) {
-        const currentRestaurantId = prevCart[0].restaurantId;
-        if (currentRestaurantId !== item.restaurantId) {
-          // Clear cart dan tambah item baru
-          return [{ ...item, quantity: 1 }];
-        }
-      }
-
+      // Biarkan semua item dari berbagai restaurant bisa ditambahkan ke cart yang sama
       // Normal flow: tambah item
       const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
       if (existingItem) {
