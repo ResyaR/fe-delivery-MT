@@ -160,6 +160,22 @@ export default function CartPage() {
   const subtotal = getTotalPrice();
   const total = subtotal + deliveryFee - discount;
 
+  // Kelompokkan item berdasarkan restaurant
+  const itemsByRestaurant = cart.reduce((acc, item) => {
+    const restaurantId = item.restaurantId;
+    if (!acc[restaurantId]) {
+      acc[restaurantId] = {
+        restaurantId: restaurantId,
+        restaurantName: item.restaurantName,
+        items: []
+      };
+    }
+    acc[restaurantId].items.push(item);
+    return acc;
+  }, {});
+
+  const restaurantGroups = Object.values(itemsByRestaurant);
+
   return (
     <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen">
       <MTTransFoodHeader />
@@ -195,19 +211,6 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Restaurant Info Card */}
-                <RestaurantInfoCard 
-                  restaurant={cart[0] ? {
-                    name: cart[0].restaurantName,
-                    image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E',
-                    rating: 4.8,
-                    category: 'Food',
-                    openingTime: '10:00',
-                    closingTime: '22:00'
-                  } : null}
-                  subtotal={subtotal}
-                />
-
                 {/* Address Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -251,77 +254,105 @@ export default function CartPage() {
                   )}
                 </div>
 
-                {/* Cart Items */}
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-900">
-                      {cart[0]?.restaurantName}
-                    </h2>
-                    <button
-                      onClick={() => setShowConfirmClear(true)}
-                      className="text-sm text-red-600 hover:text-red-700 font-medium"
-                      aria-label="Clear all items from cart"
-                    >
-                      Hapus Semua
-                    </button>
-                  </div>
+                {/* Restaurant Groups */}
+                {restaurantGroups.map((group) => {
+                  const restaurantSubtotal = group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                  const restaurantItemIds = group.items.map(item => item.menuId);
+                  
+                  return (
+                    <div key={group.restaurantId} className="space-y-4">
+                      {/* Restaurant Info Card */}
+                      <RestaurantInfoCard 
+                        restaurant={{
+                          name: group.restaurantName,
+                          image: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3E%3F%3C/text%3E%3C/svg%3E',
+                          rating: 4.8,
+                          category: 'Food',
+                          openingTime: '10:00',
+                          closingTime: '22:00'
+                        }}
+                        subtotal={restaurantSubtotal}
+                      />
 
-                  <div className="divide-y divide-gray-200">
-                    {cart.map((item) => (
-                      <div key={item.menuId} className="p-4 flex gap-4">
-                        <img
-                          src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'}
-                          alt={item.menuName}
-                          className="w-24 h-24 object-cover rounded-lg"
-                          loading="lazy"
-                          onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'; }}
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 mb-1">{item.menuName}</h3>
-                          <p className="text-lg font-bold text-[#E00000] mb-3">
-                            Rp {item.price.toLocaleString('id-ID')}
-                          </p>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center border border-gray-300 rounded-lg">
-                              <button
-                                onClick={() => handleUpdateQuantity(item.menuId, item.quantity - 1)}
-                                disabled={updatingItem === item.menuId}
-                                className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
-                                aria-label="Decrease quantity"
-                              >
-                                <span className="material-symbols-outlined text-lg">remove</span>
-                              </button>
-                              <span className="px-4 py-2 font-semibold min-w-[3rem] text-center">
-                                {updatingItem === item.menuId ? '...' : item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleUpdateQuantity(item.menuId, item.quantity + 1)}
-                                disabled={updatingItem === item.menuId}
-                                className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
-                                aria-label="Increase quantity"
-                              >
-                                <span className="material-symbols-outlined text-lg">add</span>
-                              </button>
-                            </div>
-                            <button
-                              onClick={() => handleRemoveFromCart(item.menuId)}
-                              className="text-red-600 hover:text-red-700 p-2"
-                              aria-label={`Remove ${item.menuName} from cart`}
-                            >
-                              <span className="material-symbols-outlined">delete</span>
-                            </button>
-                          </div>
+                      {/* Cart Items untuk restaurant ini */}
+                      <div className="bg-white rounded-lg border border-gray-200">
+                        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                          <h2 className="text-lg font-bold text-gray-900">
+                            {group.restaurantName}
+                          </h2>
+                          <button
+                            onClick={() => {
+                              // Hapus semua item dari restaurant ini
+                              restaurantItemIds.forEach(menuId => {
+                                handleRemoveFromCart(menuId);
+                              });
+                            }}
+                            className="text-sm text-red-600 hover:text-red-700 font-medium"
+                            aria-label={`Clear all items from ${group.restaurantName}`}
+                          >
+                            Hapus Semua
+                          </button>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">
-                            Rp {(item.price * item.quantity).toLocaleString('id-ID')}
-                          </p>
+
+                        <div className="divide-y divide-gray-200">
+                          {group.items.map((item) => (
+                            <div key={item.menuId} className="p-4 flex gap-4">
+                              <img
+                                src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'}
+                                alt={item.menuName}
+                                className="w-24 h-24 object-cover rounded-lg"
+                                loading="lazy"
+                                onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'; }}
+                              />
+                              <div className="flex-1">
+                                <h3 className="font-bold text-gray-900 mb-1">{item.menuName}</h3>
+                                <p className="text-lg font-bold text-[#E00000] mb-3">
+                                  Rp {item.price.toLocaleString('id-ID')}
+                                </p>
+                                
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center border border-gray-300 rounded-lg">
+                                    <button
+                                      onClick={() => handleUpdateQuantity(item.menuId, item.quantity - 1)}
+                                      disabled={updatingItem === item.menuId}
+                                      className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
+                                      aria-label="Decrease quantity"
+                                    >
+                                      <span className="material-symbols-outlined text-lg">remove</span>
+                                    </button>
+                                    <span className="px-4 py-2 font-semibold min-w-[3rem] text-center">
+                                      {updatingItem === item.menuId ? '...' : item.quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => handleUpdateQuantity(item.menuId, item.quantity + 1)}
+                                      disabled={updatingItem === item.menuId}
+                                      className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
+                                      aria-label="Increase quantity"
+                                    >
+                                      <span className="material-symbols-outlined text-lg">add</span>
+                                    </button>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveFromCart(item.menuId)}
+                                    className="text-red-600 hover:text-red-700 p-2"
+                                    aria-label={`Remove ${item.menuName} from cart`}
+                                  >
+                                    <span className="material-symbols-outlined">delete</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-gray-900">
+                                  Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })}
 
                 {/* Notes Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
