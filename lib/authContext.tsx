@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Redirect setelah delay singkat untuk memberi waktu notifikasi muncul
     if (typeof window !== 'undefined') {
       setTimeout(() => {
-        window.location.href = '/signin';
+      window.location.href = '/signin';
       }, 1500); // Delay 1.5 detik untuk notifikasi terlihat
     }
   };
@@ -250,7 +250,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setTimeout(async () => {
                   const retryToken = await refreshAuthToken();
                   if (!retryToken) {
-                    await handleLogout();
+              await handleLogout();
                   } else {
                     setTokenVersion(prev => prev + 1);
                   }
@@ -276,7 +276,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
               }, 5000);
             } else {
-              await handleLogout();
+            await handleLogout();
             }
           }
         }, refreshTime);

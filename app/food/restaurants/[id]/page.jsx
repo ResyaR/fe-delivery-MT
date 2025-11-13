@@ -68,9 +68,9 @@ export default function RestaurantDetailPage() {
 
       // Beri notifikasi sukses setelah berhasil
       addPromise.then(() => {
-        setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
-        setShowNotification(true);
-        setTimeout(() => setShowNotification(false), 1500);
+      setNotificationMessage(`${menu.name} ditambahkan ke keranjang`);
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 1500);
       }).catch((error) => {
         console.error('Error adding to cart:', error);
         const errorMessage = error?.message || error?.response?.data?.message || 'Gagal menambahkan ke keranjang';

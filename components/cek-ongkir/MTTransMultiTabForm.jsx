@@ -40,7 +40,10 @@ export default function MTTransMultiTabForm() {
   // Scheduled Delivery state
   const [scheduledFormData, setScheduledFormData] = useState({
     pickupLocation: '',
+    pickupAddress: '',
     dropoffLocation: '',
+    dropoffAddress: '',
+    serviceId: '',
     scheduledDate: '',
     scheduleTimeSlot: '',
     itemName: '',
@@ -48,6 +51,16 @@ export default function MTTransMultiTabForm() {
     notes: ''
   });
   const [scheduledPrice, setScheduledPrice] = useState(null);
+  
+  // Scheduled Delivery autocomplete state
+  const [scheduledPickupSearch, setScheduledPickupSearch] = useState('');
+  const [scheduledDestSearch, setScheduledDestSearch] = useState('');
+  const [selectedScheduledPickup, setSelectedScheduledPickup] = useState(null);
+  const [selectedScheduledDest, setSelectedScheduledDest] = useState(null);
+  const [showScheduledPickupDropdown, setShowScheduledPickupDropdown] = useState(false);
+  const [showScheduledDestDropdown, setShowScheduledDestDropdown] = useState(false);
+  const scheduledPickupRef = useRef(null);
+  const scheduledDestRef = useRef(null);
 
   // Multi-Drop state
   const [multiDropData, setMultiDropData] = useState({
@@ -77,6 +90,16 @@ export default function MTTransMultiTabForm() {
     scheduleTimeSlot: ''
   });
   const [paketBesarPrice, setPaketBesarPrice] = useState(null);
+  
+  // Paket Besar autocomplete state
+  const [paketBesarPickupSearch, setPaketBesarPickupSearch] = useState('');
+  const [paketBesarDestSearch, setPaketBesarDestSearch] = useState('');
+  const [selectedPaketBesarPickup, setSelectedPaketBesarPickup] = useState(null);
+  const [selectedPaketBesarDest, setSelectedPaketBesarDest] = useState(null);
+  const [showPaketBesarPickupDropdown, setShowPaketBesarPickupDropdown] = useState(false);
+  const [showPaketBesarDestDropdown, setShowPaketBesarDestDropdown] = useState(false);
+  const paketBesarPickupRef = useRef(null);
+  const paketBesarDestRef = useRef(null);
 
   // Toast notification state
   const [toast, setToast] = useState(null);
@@ -114,6 +137,18 @@ export default function MTTransMultiTabForm() {
       }
       if (destRef.current && !destRef.current.contains(event.target)) {
         setShowDestDropdown(false);
+      }
+      if (scheduledPickupRef.current && !scheduledPickupRef.current.contains(event.target)) {
+        setShowScheduledPickupDropdown(false);
+      }
+      if (scheduledDestRef.current && !scheduledDestRef.current.contains(event.target)) {
+        setShowScheduledDestDropdown(false);
+      }
+      if (paketBesarPickupRef.current && !paketBesarPickupRef.current.contains(event.target)) {
+        setShowPaketBesarPickupDropdown(false);
+      }
+      if (paketBesarDestRef.current && !paketBesarDestRef.current.contains(event.target)) {
+        setShowPaketBesarDestDropdown(false);
       }
     }
     
@@ -167,6 +202,80 @@ export default function MTTransMultiTabForm() {
   const filteredDestCities = cities.filter(city =>
     city.name.toLowerCase().includes(destSearch.toLowerCase()) ||
     city.province.toLowerCase().includes(destSearch.toLowerCase())
+  ).slice(0, 10);
+
+  // Scheduled Delivery autocomplete handlers
+  const handleScheduledPickupSearch = (value) => {
+    setScheduledPickupSearch(value);
+    setShowScheduledPickupDropdown(true);
+    setSelectedScheduledPickup(null);
+  };
+
+  const handleScheduledDestSearch = (value) => {
+    setScheduledDestSearch(value);
+    setShowScheduledDestDropdown(true);
+    setSelectedScheduledDest(null);
+  };
+
+  const selectScheduledPickup = (city) => {
+    setSelectedScheduledPickup(city);
+    setScheduledPickupSearch(`${city.name}, ${city.province}`);
+    setShowScheduledPickupDropdown(false);
+    setScheduledFormData(prev => ({ ...prev, pickupLocation: `${city.name}, ${city.province}` }));
+  };
+
+  const selectScheduledDest = (city) => {
+    setSelectedScheduledDest(city);
+    setScheduledDestSearch(`${city.name}, ${city.province}`);
+    setShowScheduledDestDropdown(false);
+    setScheduledFormData(prev => ({ ...prev, dropoffLocation: `${city.name}, ${city.province}` }));
+  };
+
+  const filteredScheduledPickupCities = cities.filter(city =>
+    city.name.toLowerCase().includes(scheduledPickupSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(scheduledPickupSearch.toLowerCase())
+  ).slice(0, 10);
+
+  const filteredScheduledDestCities = cities.filter(city =>
+    city.name.toLowerCase().includes(scheduledDestSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(scheduledDestSearch.toLowerCase())
+  ).slice(0, 10);
+
+  // Paket Besar autocomplete handlers
+  const handlePaketBesarPickupSearch = (value) => {
+    setPaketBesarPickupSearch(value);
+    setShowPaketBesarPickupDropdown(true);
+    setSelectedPaketBesarPickup(null);
+  };
+
+  const handlePaketBesarDestSearch = (value) => {
+    setPaketBesarDestSearch(value);
+    setShowPaketBesarDestDropdown(true);
+    setSelectedPaketBesarDest(null);
+  };
+
+  const selectPaketBesarPickup = (city) => {
+    setSelectedPaketBesarPickup(city);
+    setPaketBesarPickupSearch(`${city.name}, ${city.province}`);
+    setShowPaketBesarPickupDropdown(false);
+    setPaketBesarData({ ...paketBesarData, pickupLocation: `${city.name}, ${city.province}` });
+  };
+
+  const selectPaketBesarDest = (city) => {
+    setSelectedPaketBesarDest(city);
+    setPaketBesarDestSearch(`${city.name}, ${city.province}`);
+    setShowPaketBesarDestDropdown(false);
+    setPaketBesarData({ ...paketBesarData, dropoffLocation: `${city.name}, ${city.province}` });
+  };
+
+  const filteredPaketBesarPickupCities = cities.filter(city =>
+    city.name.toLowerCase().includes(paketBesarPickupSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(paketBesarPickupSearch.toLowerCase())
+  ).slice(0, 10);
+
+  const filteredPaketBesarDestCities = cities.filter(city =>
+    city.name.toLowerCase().includes(paketBesarDestSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(paketBesarDestSearch.toLowerCase())
   ).slice(0, 10);
 
   const handleInputChange = (e) => {
@@ -243,8 +352,16 @@ export default function MTTransMultiTabForm() {
     }
 
     // Validation
-    if (!scheduledFormData.pickupLocation || !scheduledFormData.dropoffLocation) {
-      setToast({ message: 'Masukkan alamat pickup dan tujuan', type: 'warning' });
+    if (!selectedScheduledPickup || !selectedScheduledDest) {
+      setToast({ message: 'Pilih kota penjemputan dan tujuan dari autocomplete', type: 'warning' });
+      return;
+    }
+    if (!scheduledFormData.pickupAddress.trim() || !scheduledFormData.dropoffAddress.trim()) {
+      setToast({ message: 'Lengkapi detail alamat penjemputan dan tujuan', type: 'warning' });
+      return;
+    }
+    if (!scheduledFormData.serviceId) {
+      setToast({ message: 'Pilih jenis layanan terlebih dahulu', type: 'warning' });
       return;
     }
     if (!scheduledFormData.scheduledDate || !scheduledFormData.scheduleTimeSlot) {
@@ -254,16 +371,30 @@ export default function MTTransMultiTabForm() {
 
     setLoading(true);
     try {
+      const pickupCityLabel = selectedScheduledPickup ? `${selectedScheduledPickup.name}, ${selectedScheduledPickup.province}` : scheduledFormData.pickupLocation;
+      const dropoffCityLabel = selectedScheduledDest ? `${selectedScheduledDest.name}, ${selectedScheduledDest.province}` : scheduledFormData.dropoffLocation;
+      const pickupLocationCombined = `${scheduledFormData.pickupAddress.trim()} • ${pickupCityLabel}`;
+      const dropoffLocationCombined = `${scheduledFormData.dropoffAddress.trim()} • ${dropoffCityLabel}`;
+      const selectedService = services.find((service) => String(service.id) === scheduledFormData.serviceId);
+
+      const notesParts = [];
+      if (selectedService) {
+        notesParts.push(`Jenis Layanan: ${selectedService.name}${selectedService.estimasi ? ` (${selectedService.estimasi})` : ''}`);
+      }
+      if (scheduledFormData.notes.trim()) {
+        notesParts.push(scheduledFormData.notes.trim());
+      }
+
       const payload = {
-        pickupLocation: scheduledFormData.pickupLocation,
-        dropoffLocation: scheduledFormData.dropoffLocation,
+        pickupLocation: pickupLocationCombined,
+        dropoffLocation: dropoffLocationCombined,
         scheduledDate: scheduledFormData.scheduledDate,
         scheduleTimeSlot: scheduledFormData.scheduleTimeSlot,
         barang: scheduledFormData.itemName ? {
           itemName: scheduledFormData.itemName,
           scale: scheduledFormData.weight
         } : undefined,
-        notes: scheduledFormData.notes
+        notes: notesParts.length ? notesParts.join('\n') : undefined
       };
 
       const response = await DeliveryAPI.createScheduledDelivery(payload);
@@ -281,7 +412,10 @@ export default function MTTransMultiTabForm() {
       // Reset form
       setScheduledFormData({
         pickupLocation: '',
+        pickupAddress: '',
         dropoffLocation: '',
+        dropoffAddress: '',
+        serviceId: '',
         scheduledDate: '',
         scheduleTimeSlot: '',
         itemName: '',
@@ -289,6 +423,11 @@ export default function MTTransMultiTabForm() {
         notes: ''
       });
       setScheduledPrice(null);
+      // Reset autocomplete
+      setScheduledPickupSearch('');
+      setScheduledDestSearch('');
+      setSelectedScheduledPickup(null);
+      setSelectedScheduledDest(null);
     } catch (error) {
       console.error('Error creating scheduled delivery:', error);
       setToast({ 
@@ -412,8 +551,8 @@ export default function MTTransMultiTabForm() {
     }
 
     // Validation
-    if (!paketBesarData.pickupLocation || !paketBesarData.dropoffLocation) {
-      setToast({ message: 'Masukkan alamat pickup dan tujuan', type: 'warning' });
+    if (!selectedPaketBesarPickup || !selectedPaketBesarDest) {
+      setToast({ message: 'Pilih kota penjemputan dan tujuan dari autocomplete', type: 'warning' });
       return;
     }
     if (!paketBesarData.weight || !paketBesarData.length || !paketBesarData.width || !paketBesarData.height) {
@@ -464,6 +603,11 @@ export default function MTTransMultiTabForm() {
         scheduleTimeSlot: ''
       });
       setPaketBesarPrice(null);
+      // Reset autocomplete
+      setPaketBesarPickupSearch('');
+      setPaketBesarDestSearch('');
+      setSelectedPaketBesarPickup(null);
+      setSelectedPaketBesarDest(null);
     } catch (error) {
       console.error('Error creating paket besar delivery:', error);
       setToast({ 
@@ -685,32 +829,108 @@ export default function MTTransMultiTabForm() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Alamat Penjemputan Autocomplete */}
+              <div className="relative" ref={scheduledPickupRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Penjemputan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-[2.5rem] text-[#E00000] text-xl z-10">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#E00000] text-xl z-10">
                   location_on
                 </span>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Penjemputan</label>
                 <input
                   type="text"
-                  value={scheduledFormData.pickupLocation}
-                  onChange={(e) => setScheduledFormData({ ...scheduledFormData, pickupLocation: e.target.value })}
                   className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
-                  placeholder="Masukkan alamat pickup"
+                    placeholder="Ketik nama kota penjemputan..."
+                    value={scheduledPickupSearch}
+                    onChange={(e) => handleScheduledPickupSearch(e.target.value)}
+                    onFocus={() => setShowScheduledPickupDropdown(true)}
                 />
               </div>
+                {showScheduledPickupDropdown && scheduledPickupSearch && filteredScheduledPickupCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredScheduledPickupCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectScheduledPickup(city)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Alamat Tujuan Autocomplete */}
+              <div className="relative" ref={scheduledDestRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Tujuan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-[2.5rem] text-gray-500 text-xl z-10">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl z-10">
                   my_location
                 </span>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Tujuan</label>
                 <input
                   type="text"
-                  value={scheduledFormData.dropoffLocation}
-                  onChange={(e) => setScheduledFormData({ ...scheduledFormData, dropoffLocation: e.target.value })}
                   className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
-                  placeholder="Masukkan alamat tujuan"
+                    placeholder="Ketik nama kota tujuan..."
+                    value={scheduledDestSearch}
+                    onChange={(e) => handleScheduledDestSearch(e.target.value)}
+                    onFocus={() => setShowScheduledDestDropdown(true)}
                 />
               </div>
+                {showScheduledDestDropdown && scheduledDestSearch && filteredScheduledDestCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredScheduledDestCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectScheduledDest(city)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Detail Alamat Penjemputan</label>
+                <textarea
+                  value={scheduledFormData.pickupAddress}
+                  onChange={(e) => setScheduledFormData(prev => ({ ...prev, pickupAddress: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+                  placeholder="Nama jalan, nomor rumah, patokan..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Detail Alamat Tujuan</label>
+                <textarea
+                  value={scheduledFormData.dropoffAddress}
+                  onChange={(e) => setScheduledFormData(prev => ({ ...prev, dropoffAddress: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+                  placeholder="Nama jalan, nomor rumah, patokan..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Layanan</label>
+              <select
+                value={scheduledFormData.serviceId}
+                onChange={(e) => setScheduledFormData(prev => ({ ...prev, serviceId: e.target.value }))}
+                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+              >
+                <option value="">Pilih jenis layanan</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} {service.estimasi ? `- ${service.estimasi}` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -921,31 +1141,68 @@ export default function MTTransMultiTabForm() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Alamat Penjemputan Autocomplete */}
+              <div className="relative" ref={paketBesarPickupRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Penjemputan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-[2.5rem] text-[#E00000] text-xl z-10">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#E00000] text-xl z-10">
                   location_on
                 </span>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Penjemputan</label>
                 <input
                   type="text"
-                  value={paketBesarData.pickupLocation}
-                  onChange={(e) => setPaketBesarData({ ...paketBesarData, pickupLocation: e.target.value })}
                   className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
-                  placeholder="Alamat Penjemputan"
+                    placeholder="Ketik nama kota penjemputan..."
+                    value={paketBesarPickupSearch}
+                    onChange={(e) => handlePaketBesarPickupSearch(e.target.value)}
+                    onFocus={() => setShowPaketBesarPickupDropdown(true)}
                 />
               </div>
+                {showPaketBesarPickupDropdown && paketBesarPickupSearch && filteredPaketBesarPickupCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredPaketBesarPickupCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectPaketBesarPickup(city)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Alamat Tujuan Autocomplete */}
+              <div className="relative" ref={paketBesarDestRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Tujuan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-[2.5rem] text-gray-500 text-xl z-10">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl z-10">
                   my_location
                 </span>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Tujuan</label>
                 <input
                   type="text"
-                  value={paketBesarData.dropoffLocation}
-                  onChange={(e) => setPaketBesarData({ ...paketBesarData, dropoffLocation: e.target.value })}
                   className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
-                  placeholder="Alamat Tujuan"
-                />
+                    placeholder="Ketik nama kota tujuan..."
+                    value={paketBesarDestSearch}
+                    onChange={(e) => handlePaketBesarDestSearch(e.target.value)}
+                    onFocus={() => setShowPaketBesarDestDropdown(true)}
+                  />
+                </div>
+                {showPaketBesarDestDropdown && paketBesarDestSearch && filteredPaketBesarDestCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredPaketBesarDestCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectPaketBesarDest(city)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
