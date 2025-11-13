@@ -221,13 +221,55 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
       
-      // Handle error "different restaurants" - auto clear and retry (fallback)
       const errorMessage = error?.response?.data?.message || error?.message || '';
+      const isServerError = error?.response?.status === 500;
       const isDifferentRestaurantError = error?.response?.status === 400 && 
         (errorMessage.includes('different restaurants') || 
          errorMessage.includes('different restaurant') ||
          errorMessage.includes('Cannot add items from different restaurants'));
       
+      // Handle error 500 - retry dengan sync cart dulu (masalah backend cartId null)
+      if (isServerError) {
+        console.log('Server error (500) detected, syncing cart and retrying...');
+        // Clear flag dulu agar bisa retry
+        addingItemsRef.current.delete(item.menuId);
+        operationInProgressRef.current = false;
+        
+        // Sync cart dulu untuk pastikan state konsisten
+        try {
+          await new Promise(resolve => setTimeout(resolve, 300)); // Small delay
+          const syncedCart = await CartAPI.getCart();
+          const syncedFrontendCart = convertBackendCartToFrontend(syncedCart);
+          setCart(syncedFrontendCart);
+          
+          // Cek apakah item sudah ada di cart setelah sync
+          const existingItem = syncedFrontendCart.find((cartItem) => cartItem.menuId === item.menuId);
+          if (existingItem) {
+            // Item sudah ada, tidak perlu add lagi
+            return;
+          }
+          
+          // Retry add item dengan flag baru
+          addingItemsRef.current.add(item.menuId);
+          operationInProgressRef.current = true;
+          
+          const backendCart = await CartAPI.addItemToCart(item.menuId, 1);
+          const frontendCart = convertBackendCartToFrontend(backendCart, item.restaurantName);
+          setCart(frontendCart);
+          
+          addingItemsRef.current.delete(item.menuId);
+          operationInProgressRef.current = false;
+          return;
+        } catch (retryError: any) {
+          console.error('Error retrying after 500 error:', retryError);
+          setCart(previousCart);
+          addingItemsRef.current.delete(item.menuId);
+          operationInProgressRef.current = false;
+          throw new Error(retryError?.response?.data?.message || retryError?.message || 'Gagal menambahkan item ke keranjang');
+        }
+      }
+      
+      // Handle error "different restaurants" - auto clear and retry (fallback)
       if (isDifferentRestaurantError) {
         console.log('Backend detected different restaurant, clearing and retrying...');
         try {
@@ -246,15 +288,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         } catch (retryError: any) {
           console.error('Error retrying after clear cart:', retryError);
           setCart(previousCart);
+          addingItemsRef.current.delete(item.menuId);
+          operationInProgressRef.current = false;
           throw new Error(retryError?.response?.data?.message || retryError?.message || 'Gagal menambahkan item ke keranjang');
         }
       }
       
       // Rollback untuk error lain
       setCart(previousCart);
+      addingItemsRef.current.delete(item.menuId);
+      operationInProgressRef.current = false;
       throw new Error(errorMessage || 'Gagal menambahkan item ke keranjang');
     } finally {
-      addingItemsRef.current.delete(item.menuId);
+      // Pastikan flag selalu di-clear (fallback)
+      if (addingItemsRef.current.has(item.menuId)) {
+        addingItemsRef.current.delete(item.menuId);
+      }
       operationInProgressRef.current = false;
     }
   };
@@ -285,9 +334,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return prevCart.filter((item) => item.menuId !== menuId);
     });
     
-    // If item not found, nothing to remove
+    // If item not found, nothing to remove (ini normal, tidak perlu warn)
     if (!cartItem) {
-      console.warn('Item not found in cart:', menuId);
+      // Item sudah tidak ada, mungkin sudah dihapus sebelumnya
+      // Ini normal, tidak perlu warn
       removingItemsRef.current.delete(menuId);
       operationInProgressRef.current = false;
       return;
