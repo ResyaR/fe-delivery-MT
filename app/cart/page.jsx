@@ -35,25 +35,24 @@ export default function CartPage() {
   const [updatingItem, setUpdatingItem] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
-  // Mock saved addresses
-  const savedAddresses = [
-    {
-      label: 'Rumah',
-      street: 'Jl. Sudirman No. 123',
-      city: 'Jakarta Selatan',
-      province: 'DKI Jakarta',
-      postalCode: '12190',
-      note: 'Rumah cat putih, pagar hitam'
-    },
-    {
-      label: 'Kantor',
-      street: 'Gedung Plaza Indonesia Lt. 5',
-      city: 'Jakarta Pusat',
-      province: 'DKI Jakarta',
-      postalCode: '10350',
-      note: 'Lobby utara'
+  // Load saved addresses from localStorage
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
+  useEffect(() => {
+    // Load saved addresses from localStorage
+    const saved = localStorage.getItem('user_addresses');
+    if (saved) {
+      try {
+        const addresses = JSON.parse(saved);
+        setSavedAddresses(addresses);
+      } catch (error) {
+        console.error('Error loading saved addresses:', error);
+        setSavedAddresses([]);
+      }
+    } else {
+      setSavedAddresses([]);
     }
-  ];
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,6 +141,21 @@ export default function CartPage() {
 
   const handleSelectAddress = (address) => {
     setSelectedAddress(address);
+    
+    // Save new address to localStorage if it doesn't exist
+    if (address) {
+      const existingIndex = savedAddresses.findIndex(
+        addr => addr.label === address.label && addr.street === address.street
+      );
+      
+      if (existingIndex === -1) {
+        // New address, add to saved addresses
+        const updatedAddresses = [...savedAddresses, address];
+        setSavedAddresses(updatedAddresses);
+        localStorage.setItem('user_addresses', JSON.stringify(updatedAddresses));
+      }
+    }
+    
     // Calculate delivery fee based on zone
     const baseFee = 15000;
     const zoneMultiplier = address.zone ? address.zone * 2000 : 1; // Zone 1 = 2000, Zone 2 = 4000, etc

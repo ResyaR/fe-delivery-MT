@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-export default function Toast({ message, type = 'success', onClose, duration = 4000 }) {
+export default function Toast({ message, type = 'success', onClose, duration = 4000, icon }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
@@ -18,18 +18,20 @@ export default function Toast({ message, type = 'success', onClose, duration = 4
     warning: 'bg-yellow-500',
   };
 
-  const icons = {
+  const defaultIcons = {
     success: 'check_circle',
     error: 'error',
     info: 'info',
     warning: 'warning',
   };
 
+  const iconToShow = icon || defaultIcons[type];
+
   return (
     <div className="fixed top-4 right-4 z-[9999] animate-slide-down">
       <div className={`${styles[type]} text-white px-6 py-4 rounded-lg shadow-2xl flex items-start gap-3 max-w-md min-w-[300px]`}>
         <span className="material-symbols-outlined text-2xl flex-shrink-0">
-          {icons[type]}
+          {iconToShow}
         </span>
         <div className="flex-1">
           <p className="font-medium leading-relaxed whitespace-pre-line">{message}</p>

@@ -145,7 +145,9 @@ export default function OrdersPage() {
                         {getStatusIcon(order.status)}
                       </span>
                       <div>
-                        <p className="font-bold text-gray-900">#{order.id.toString().padStart(4, '0')}</p>
+                        <p className="font-bold text-gray-900">
+                          {order.orderNumber || `#${order.id}`}
+                        </p>
                         <p className="text-sm text-gray-600">{order.restaurant?.name || 'Restaurant'}</p>
                       </div>
                     </div>
@@ -212,7 +214,7 @@ export default function OrdersPage() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Detail Pesanan #{selectedOrder.id.toString().padStart(4, '0')}
+                  Detail Pesanan {selectedOrder.orderNumber || `#${selectedOrder.id}`}
                 </h2>
                 <button
                   onClick={() => setShowDetailModal(false)}

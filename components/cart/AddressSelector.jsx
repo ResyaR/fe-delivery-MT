@@ -85,6 +85,8 @@ export default function AddressSelector({
       alert('Pilih kota terlebih dahulu untuk menentukan zona pengiriman');
       return;
     }
+    
+    // Address will be saved in parent component (cart/page.jsx) via onSelectAddress
     onSelectAddress(newAddress);
     setShowAddForm(false);
     setNewAddress({

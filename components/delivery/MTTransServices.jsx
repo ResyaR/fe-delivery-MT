@@ -1,13 +1,26 @@
 "use client";
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import Toast from '../common/Toast';
 
 export default function MTTransServices() {
   const router = useRouter();
   const { user } = useAuth();
+  const [toast, setToast] = useState(null);
 
   const handleServiceClick = (serviceTitle) => {
+    if (serviceTitle === 'Titip Belanja') {
+      // Show coming soon notification
+      setToast({
+        message: 'Coming Soon!',
+        type: 'info',
+        icon: 'schedule'
+      });
+      return;
+    }
+
     if (!user) {
       router.push('/signin');
       return;
@@ -20,9 +33,6 @@ export default function MTTransServices() {
         break;
       case 'Makanan & Minuman':
         router.push('/food');
-        break;
-      case 'Titip Belanja':
-        router.push('/cek-ongkir?type=titip-belanja');
         break;
       case 'Ekspedisi Lokal':
         router.push('/cek-ongkir?type=ekspedisi-lokal');
@@ -100,6 +110,16 @@ export default function MTTransServices() {
           <a className="text-[#E00000] font-semibold hover:underline" href="#">Lihat Semua Categories →</a>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          duration={5000}
+        />
+      )}
     </section>
   );
 }
