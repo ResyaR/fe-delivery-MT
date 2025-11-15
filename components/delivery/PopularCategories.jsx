@@ -1,13 +1,26 @@
 "use client"
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/authContext'
+import Toast from '../common/Toast'
 
 const PopularCategories = () => {
   const router = useRouter()
   const { user } = useAuth()
+  const [toast, setToast] = useState(null)
 
   const handleCategoryClick = (category) => {
+    if (category === "Titip Belanja") {
+      // Show coming soon notification
+      setToast({
+        message: 'Coming Soon!',
+        type: 'info',
+        icon: 'schedule'
+      })
+      return
+    }
+
     if (!user) {
       router.push('/signin')
       return
@@ -17,8 +30,6 @@ const PopularCategories = () => {
       router.push('/food')
     } else if (category === "Kirim Barang") {
       router.push('/cek-ongkir?tab=cek-ongkir')
-    } else if (category === "Titip Belanja") {
-      router.push('/cek-ongkir?tab=multi-drop')
     } else if (category === "Paket Besar / Ekspedisi Lokal") {
       router.push('/cek-ongkir?tab=ekspedisi')
     } else {
@@ -111,6 +122,16 @@ const PopularCategories = () => {
           </button>
         ))}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          duration={5000}
+        />
+      )}
     </div>
   )
 }

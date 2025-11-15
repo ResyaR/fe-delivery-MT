@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { OngkirAPI } from "../../lib/ongkirApi";
 import DeliveryAPI from "../../lib/deliveryApi";
 import { useAuth } from "../../lib/authContext";
+import { OrderAPI } from "../../lib/orderApi";
 import Toast from "../common/Toast";
 
 export default function MTTransMultiTabForm() {
@@ -15,6 +16,9 @@ export default function MTTransMultiTabForm() {
   const [activeTab, setActiveTab] = useState('lacak');
   const [trackingNumbers, setTrackingNumbers] = useState('');
   const [addedCount, setAddedCount] = useState(0);
+  const [trackingResults, setTrackingResults] = useState([]);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [trackingError, setTrackingError] = useState('');
   
   // Ongkir form state
   const [cities, setCities] = useState([]);
@@ -299,8 +303,70 @@ export default function MTTransMultiTabForm() {
     
     if (activeTab === 'cek-ongkir') {
       await handleCalculateOngkir();
+    } else if (activeTab === 'lacak') {
+      await handleTrackOrders();
     } else {
-    console.log('Form submitted:', { activeTab, formData, trackingNumbers });
+      console.log('Form submitted:', { activeTab, formData, trackingNumbers });
+    }
+  };
+
+  const handleTrackOrders = async () => {
+    if (!trackingNumbers.trim()) {
+      setToast({ message: 'Masukkan nomor resi terlebih dahulu', type: 'error' });
+      return;
+    }
+
+    setTrackingLoading(true);
+    setTrackingError('');
+    setTrackingResults([]);
+
+    try {
+      // Parse tracking numbers (support comma, space, or newline separated)
+      const numbers = trackingNumbers
+        .split(/[,\s\n]+/)
+        .map(num => num.trim())
+        .filter(num => num.length > 0)
+        .slice(0, 5); // Max 5 resi
+
+      if (numbers.length === 0) {
+        setToast({ message: 'Masukkan nomor resi yang valid', type: 'error' });
+        setTrackingLoading(false);
+        return;
+      }
+
+      // Track all numbers
+      const results = await Promise.allSettled(
+        numbers.map(num => OrderAPI.trackOrderPublic(num))
+      );
+
+      const successful = [];
+      const failed = [];
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          successful.push(result.value);
+        } else {
+          failed.push({ number: numbers[index], error: result.reason.message });
+        }
+      });
+
+      setTrackingResults(successful);
+      
+      if (failed.length > 0) {
+        setTrackingError(`Beberapa resi tidak ditemukan: ${failed.map(f => f.number).join(', ')}`);
+      }
+
+      if (successful.length > 0) {
+        setToast({ 
+          message: `Berhasil melacak ${successful.length} resi`, 
+          type: 'success' 
+        });
+      }
+    } catch (error) {
+      setTrackingError(error.message || 'Gagal melacak resi');
+      setToast({ message: error.message || 'Gagal melacak resi', type: 'error' });
+    } finally {
+      setTrackingLoading(false);
     }
   };
 
@@ -627,28 +693,109 @@ export default function MTTransMultiTabForm() {
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nomor resi atau STT</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cek Resi / Lacak Pesanan</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Lacak maks. 5 STT. Pisahkan dengan koma/spasi atau langsung salin, tempel dan tekan enter.
+                Lacak maks. 5 resi. Pisahkan dengan koma/spasi atau langsung salin, tempel dan tekan enter.
+                Format: MT-XXXXXX (contoh: MT-A1B2C3, MT-X9Y8Z7)
               </p>
               <div className="relative">
                 <textarea
-                  className="w-full h-24 p-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000] resize-none"
-                  placeholder="Masukan nomor resi atau STT"
+                  className="w-full h-24 p-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000] resize-none uppercase"
+                  placeholder="Masukan nomor resi (contoh: MT-A1B2C3, MT-X9Y8Z7, atau multiple: MT-A1B2C3 MT-X9Y8Z7)"
                   value={trackingNumbers}
                   onChange={handleTrackingChange}
                 />
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-gray-500">{addedCount} ditambahkan</span>
+                  <span className="text-sm text-gray-500">{addedCount} resi ditambahkan</span>
                   <button
                     type="submit"
-                    className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                    disabled={trackingLoading || !trackingNumbers.trim()}
+                    className="bg-[#E00000] text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Lacak sekarang
+                    {trackingLoading ? 'Melacak...' : 'Lacak sekarang'}
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* Error Message */}
+            {trackingError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 text-sm">{trackingError}</p>
+              </div>
+            )}
+
+            {/* Tracking Results */}
+            {trackingResults.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-gray-900">Hasil Pelacakan</h4>
+                {trackingResults.map((order, index) => (
+                  <div key={order.id || index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-900">{order.orderNumber || `#${order.id}`}</h5>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(order.createdAt).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'delivering' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.status === 'delivered' ? 'Selesai' :
+                         order.status === 'delivering' ? 'Dikirim' :
+                         order.status === 'preparing' ? 'Diproses' :
+                         order.status === 'cancelled' ? 'Dibatalkan' :
+                         'Menunggu'}
+                      </span>
+                    </div>
+
+                    {order.restaurant && (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600">Restaurant:</p>
+                        <p className="font-semibold text-gray-900">{order.restaurant.name}</p>
+                      </div>
+                    )}
+
+                    {order.items && order.items.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-1">Items:</p>
+                        <div className="space-y-1">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="text-sm text-gray-900">
+                              {item.menuName} x {item.quantity}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mb-3">
+                      <p className="text-sm text-gray-600">Alamat Pengiriman:</p>
+                      <p className="text-gray-900">{order.deliveryAddress}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total:</span>
+                        <span className="text-lg font-bold text-[#E00000]">
+                          Rp {Math.round(order.total).toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
