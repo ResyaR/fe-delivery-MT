@@ -334,9 +334,17 @@ export default function MTTransMultiTabForm() {
         return;
       }
 
-      // Track all numbers
+      // Track all numbers - support both orderNumber (MT-XXXXXX) and delivery resiCode (MT-DEL-XXXXXX)
       const results = await Promise.allSettled(
-        numbers.map(num => OrderAPI.trackOrderPublic(num))
+        numbers.map(async (num) => {
+          // Check if it's a delivery resiCode (MT-DEL-XXXXXX)
+          if (num.startsWith('MT-DEL-')) {
+            return await DeliveryAPI.trackDelivery(num);
+          } else {
+            // Otherwise, treat as orderNumber
+            return await OrderAPI.trackOrderPublic(num);
+          }
+        })
       );
 
       const successful = [];
@@ -696,12 +704,15 @@ export default function MTTransMultiTabForm() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Cek Resi / Lacak Pesanan</h3>
               <p className="text-sm text-gray-500 mb-4">
                 Lacak maks. 5 resi. Pisahkan dengan koma/spasi atau langsung salin, tempel dan tekan enter.
-                Format: MT-XXXXXX (contoh: MT-A1B2C3, MT-X9Y8Z7)
+                <br />
+                Format Pengiriman: <span className="font-mono font-semibold">MT-DEL-XXXXXX</span> (contoh: MT-DEL-A1B2C3)
+                <br />
+                Format Pesanan Makanan: <span className="font-mono font-semibold">MT-XXXXXX</span> (contoh: MT-A1B2C3)
               </p>
               <div className="relative">
                 <textarea
-                  className="w-full h-24 p-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000] resize-none uppercase"
-                  placeholder="Masukan nomor resi (contoh: MT-A1B2C3, MT-X9Y8Z7, atau multiple: MT-A1B2C3 MT-X9Y8Z7)"
+                  className="w-full h-24 p-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000] resize-none uppercase font-mono text-sm"
+                  placeholder="Masukan nomor resi (contoh: MT-DEL-A1B2C3, MT-A1B2C3, atau multiple: MT-DEL-A1B2C3 MT-A1B2C3)"
                   value={trackingNumbers}
                   onChange={handleTrackingChange}
                 />
@@ -729,71 +740,133 @@ export default function MTTransMultiTabForm() {
             {trackingResults.length > 0 && (
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-gray-900">Hasil Pelacakan</h4>
-                {trackingResults.map((order, index) => (
-                  <div key={order.id || index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h5 className="text-lg font-bold text-gray-900">{order.orderNumber || `#${order.id}`}</h5>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {new Date(order.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'delivering' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status === 'delivered' ? 'Selesai' :
-                         order.status === 'delivering' ? 'Dikirim' :
-                         order.status === 'preparing' ? 'Diproses' :
-                         order.status === 'cancelled' ? 'Dibatalkan' :
-                         'Menunggu'}
-                      </span>
-                    </div>
-
-                    {order.restaurant && (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-600">Restaurant:</p>
-                        <p className="font-semibold text-gray-900">{order.restaurant.name}</p>
-                      </div>
-                    )}
-
-                    {order.items && order.items.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-600 mb-1">Items:</p>
-                        <div className="space-y-1">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="text-sm text-gray-900">
-                              {item.menuName} x {item.quantity}
-                            </div>
-                          ))}
+                {trackingResults.map((item, index) => {
+                  // Check if it's a delivery (has resiCode) or order (has orderNumber)
+                  const isDelivery = item.resiCode || item.type;
+                  const trackingCode = isDelivery ? (item.resiCode || `MT-DEL-${String(item.id).padStart(6, '0')}`) : (item.orderNumber || `MT-${String(item.id).padStart(6, '0')}`);
+                  
+                  return (
+                    <div key={item.id || index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h5 className="text-lg font-bold text-gray-900 font-mono">{trackingCode}</h5>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {isDelivery && item.type && (
+                            <p className="text-xs text-gray-500 mt-1 capitalize">{item.type.replace('_', ' ')}</p>
+                          )}
                         </div>
-                      </div>
-                    )}
-
-                    <div className="mb-3">
-                      <p className="text-sm text-gray-600">Alamat Pengiriman:</p>
-                      <p className="text-gray-900">{order.deliveryAddress}</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total:</span>
-                        <span className="text-lg font-bold text-[#E00000]">
-                          Rp {Math.round(order.total).toLocaleString('id-ID')}
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                          item.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                          item.status === 'in_transit' ? 'bg-purple-100 text-purple-800' :
+                          item.status === 'picked_up' ? 'bg-indigo-100 text-indigo-800' :
+                          item.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                          item.status === 'delivering' ? 'bg-blue-100 text-blue-800' :
+                          item.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                          item.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {item.status === 'delivered' ? 'Terkirim' :
+                           item.status === 'in_transit' ? 'Dalam Perjalanan' :
+                           item.status === 'picked_up' ? 'Diambil' :
+                           item.status === 'accepted' ? 'Diterima' :
+                           item.status === 'delivering' ? 'Dikirim' :
+                           item.status === 'preparing' ? 'Diproses' :
+                           item.status === 'cancelled' ? 'Dibatalkan' :
+                           item.status === 'pending' ? 'Pending' :
+                           'Menunggu'}
                         </span>
                       </div>
+
+                      {/* Delivery Info */}
+                      {isDelivery ? (
+                        <>
+                          {item.user && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-600">Customer:</p>
+                              <p className="font-semibold text-gray-900">{item.user.fullName || item.user.email}</p>
+                            </div>
+                          )}
+                          
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-600">Alamat Penjemputan:</p>
+                            <p className="text-gray-900">{item.pickupLocation}</p>
+                          </div>
+
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-600">Alamat Tujuan:</p>
+                            <p className="text-gray-900">{item.dropoffLocation}</p>
+                            {item.scheduledDate && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Jadwal: {new Date(item.scheduledDate).toLocaleDateString('id-ID')} {item.scheduleTimeSlot}
+                              </p>
+                            )}
+                          </div>
+
+                          {item.barang && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-600">Barang:</p>
+                              <p className="text-gray-900">{item.barang.itemName} ({item.barang.scale})</p>
+                            </div>
+                          )}
+
+                          {item.packageDetails && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-600">Detail Paket:</p>
+                              <p className="text-gray-900">
+                                {item.packageDetails.weight} kg • {item.packageDetails.length}×{item.packageDetails.width}×{item.packageDetails.height} cm
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {/* Order Info */}
+                          {item.restaurant && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-600">Restaurant:</p>
+                              <p className="font-semibold text-gray-900">{item.restaurant.name}</p>
+                            </div>
+                          )}
+
+                          {item.items && item.items.length > 0 && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-600 mb-1">Items:</p>
+                              <div className="space-y-1">
+                                {item.items.map((orderItem, idx) => (
+                                  <div key={idx} className="text-sm text-gray-900">
+                                    {orderItem.menuName} x {orderItem.quantity}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mb-3">
+                            <p className="text-sm text-gray-600">Alamat Pengiriman:</p>
+                            <p className="text-gray-900">{item.deliveryAddress}</p>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total:</span>
+                          <span className="text-lg font-bold text-[#E00000]">
+                            Rp {Math.round(item.price || item.total || 0).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

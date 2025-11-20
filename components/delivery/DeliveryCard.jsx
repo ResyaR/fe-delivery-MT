@@ -60,7 +60,7 @@ export default function DeliveryCard({ delivery, onViewDetail }) {
             <span className="material-symbols-outlined text-xl">{typeConfig.icon}</span>
             <span className="font-semibold text-sm">{typeConfig.label}</span>
           </div>
-          <span className="text-xs text-gray-600">#{delivery.id}</span>
+          <span className="text-xs text-gray-600 font-mono">{delivery.resiCode || `#${delivery.id}`}</span>
         </div>
       </div>
 

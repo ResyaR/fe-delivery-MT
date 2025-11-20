@@ -63,7 +63,9 @@ export default function DeliveryDetailModal({ delivery, onClose }) {
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Detail Pengiriman</h2>
-            <p className="text-sm text-gray-500">Order #{delivery.id}</p>
+            <p className="text-sm text-gray-500 font-mono">
+              {delivery.resiCode ? `Kode Resi: ${delivery.resiCode}` : `Order #${delivery.id}`}
+            </p>
           </div>
           <button
             onClick={onClose}

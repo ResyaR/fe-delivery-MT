@@ -1,4 +1,5 @@
 import api from './axios';
+import { API_BASE_URL } from './config';
 
 export interface DropLocationDto {
   sequence: number;
@@ -82,6 +83,21 @@ export const DeliveryAPI = {
   async getDeliveryDetails(id: number) {
     const response = await api.get(`/delivery/${id}`);
     return response.data;
+  },
+
+  // Track delivery by resi code (public endpoint)
+  async trackDelivery(resiCode: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/delivery/public/track/${encodeURIComponent(resiCode)}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Resi tidak ditemukan');
+      }
+      const data = await response.json();
+      return data.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Resi tidak ditemukan');
+    }
   },
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { useCart } from '@/lib/cartContext';
@@ -11,8 +11,79 @@ export default function MTTransHeader() {
   const { user } = useAuth();
   const { cart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
+  const servicesDropdownRef = useRef(null);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Menu services yang tersedia
+  const servicesMenu = [
+    {
+      id: 'food',
+      label: 'Food',
+      icon: 'restaurant',
+      route: '/food',
+      description: 'Pesan makanan & minuman'
+    },
+    {
+      id: 'cek-ongkir',
+      label: 'Cek Ongkir',
+      icon: 'attach_money',
+      route: '/cek-ongkir?tab=cek-ongkir',
+      description: 'Hitung biaya pengiriman'
+    },
+    {
+      id: 'lacak',
+      label: 'Cek Resi / Lacak',
+      icon: 'search',
+      route: '/cek-ongkir?tab=lacak',
+      description: 'Lacak pengiriman Anda'
+    },
+    {
+      id: 'kirim-barang',
+      label: 'Kirim Barang',
+      icon: 'local_shipping',
+      route: '/cek-ongkir?tab=cek-ongkir&type=kirim-barang',
+      description: 'Kirim paket cepat'
+    },
+    {
+      id: 'jadwal',
+      label: 'Jadwal Pengiriman',
+      icon: 'schedule',
+      route: '/cek-ongkir?tab=jadwal',
+      description: 'Jadwalkan pengiriman'
+    },
+    {
+      id: 'multi-drop',
+      label: 'Multi Drop',
+      icon: 'place',
+      route: '/cek-ongkir?tab=multi-drop',
+      description: 'Kirim ke beberapa lokasi'
+    },
+    {
+      id: 'ekspedisi',
+      label: 'Paket Besar / Ekspedisi Lokal',
+      icon: 'inventory',
+      route: '/cek-ongkir?tab=ekspedisi',
+      description: 'Pengiriman paket besar'
+    }
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (servicesDropdownRef.current && !servicesDropdownRef.current.contains(event.target)) {
+        setIsServicesDropdownOpen(false);
+      }
+    };
+
+    if (isServicesDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isServicesDropdownOpen]);
 
   const handleSignInClick = () => {
     router.push('/signin');
@@ -28,10 +99,13 @@ export default function MTTransHeader() {
 
   const handleServicesClick = (e) => {
     e.preventDefault();
-    const servicesSection = document.getElementById('services');
-    if (servicesSection) {
-      servicesSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    setIsServicesDropdownOpen(!isServicesDropdownOpen);
+  };
+
+  const handleServiceItemClick = (route) => {
+    setIsServicesDropdownOpen(false);
+    setIsMenuOpen(false);
+    router.push(route);
   };
 
   return (
@@ -59,9 +133,51 @@ export default function MTTransHeader() {
         </div>
         
         <nav className="hidden md:flex items-center justify-center gap-16 font-medium text-gray-700 flex-1">
-          <a className="text-[#E00000] font-bold" href="/">Home</a>
-          <a className="hover:text-[#E00000] transition-colors cursor-pointer" onClick={() => router.push('/food')}>Food</a>
-          <a className="hover:text-[#E00000] transition-colors cursor-pointer" onClick={handleServicesClick}>Services</a>
+          <button 
+            className="text-[#E00000] font-bold hover:underline"
+            onClick={() => router.push('/')}
+          >
+            Home
+          </button>
+          <button 
+            className="hover:text-[#E00000] transition-colors cursor-pointer"
+            onClick={() => router.push('/food')}
+          >
+            Food
+          </button>
+          <div className="relative" ref={servicesDropdownRef}>
+            <button 
+              className="hover:text-[#E00000] transition-colors cursor-pointer flex items-center gap-1"
+              onClick={handleServicesClick}
+            >
+              Services
+              <span className="material-symbols-outlined text-sm">
+                {isServicesDropdownOpen ? 'expand_less' : 'expand_more'}
+              </span>
+            </button>
+            
+            {isServicesDropdownOpen && (
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto">
+                {servicesMenu.map((service) => (
+                  <div
+                    key={service.id}
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleServiceItemClick(service.route)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#E00000] text-xl">
+                        {service.icon}
+                      </span>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 text-sm">{service.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{service.description}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
         
         <div className="flex items-center gap-4">
@@ -108,7 +224,15 @@ export default function MTTransHeader() {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
           <div className="px-4 py-3 space-y-1">
-            <a className="block py-3 text-[#E00000] font-bold border-b border-gray-100" href="/">Home</a>
+            <button 
+              className="w-full text-left py-3 text-[#E00000] font-bold border-b border-gray-100"
+              onClick={() => {
+                router.push('/');
+                setIsMenuOpen(false);
+              }}
+            >
+              Home
+            </button>
             <button 
               onClick={() => {
                 router.push('/food');
@@ -119,15 +243,35 @@ export default function MTTransHeader() {
               <span className="material-symbols-outlined text-lg">restaurant</span>
               <span>Order Food</span>
             </button>
-            <button 
-              onClick={() => {
-                handleServicesClick({ preventDefault: () => {} });
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left py-3 text-gray-700 hover:text-[#E00000] transition-colors border-b border-gray-100"
-            >
-              Services
-            </button>
+            <div>
+              <button 
+                onClick={() => setIsServicesDropdownOpen(!isServicesDropdownOpen)}
+                className="w-full text-left py-3 text-gray-700 hover:text-[#E00000] transition-colors border-b border-gray-100 flex items-center justify-between"
+              >
+                <span>Services</span>
+                <span className="material-symbols-outlined text-sm">
+                  {isServicesDropdownOpen ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+              {isServicesDropdownOpen && (
+                <div className="pl-4 pb-2 space-y-1">
+                  {servicesMenu.map((service) => (
+                    <div
+                      key={service.id}
+                      className="px-4 py-2 text-sm text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
+                      onClick={() => {
+                        handleServiceItemClick(service.route);
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {service.icon}
+                      </span>
+                      <span>{service.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             {user && (
               <button 
                 onClick={() => {
