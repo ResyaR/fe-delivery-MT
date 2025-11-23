@@ -214,14 +214,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const now = Date.now();
       const timeUntilExpiry = expiryTime - now;
       
-      // Refresh 2 menit sebelum expire (atau 80% dari waktu expire, whichever is earlier)
+      // Refresh lebih agresif: 5 menit sebelum expire atau 70% dari waktu expire
       // Access token biasanya 15 menit, jadi:
-      // - 80% dari 15 menit = 12 menit (refresh setelah 3 menit)
-      // - 2 menit sebelum = refresh di menit ke-13
-      // Ambil yang lebih awal (lebih cepat refresh)
-      const refreshAt80Percent = timeUntilExpiry * 0.8;
-      const refreshAt2MinBefore = timeUntilExpiry - (2 * 60 * 1000);
-      const refreshTime = Math.min(refreshAt80Percent, refreshAt2MinBefore);
+      // - 70% dari 15 menit = 10.5 menit (refresh setelah 4.5 menit)
+      // - 5 menit sebelum = refresh di menit ke-10
+      // Ambil yang lebih awal (lebih cepat refresh) untuk memastikan token tidak pernah expire
+      const refreshAt70Percent = timeUntilExpiry * 0.7;
+      const refreshAt5MinBefore = timeUntilExpiry - (5 * 60 * 1000);
+      const refreshTime = Math.min(refreshAt70Percent, refreshAt5MinBefore);
 
       if (refreshTime > 0) {
         const refreshTimeSeconds = Math.round(refreshTime / 1000);
@@ -312,7 +312,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Setup initial refresh timer
     setupAutoRefresh();
 
-    // Setup periodic check every 1 minute to ensure token doesn't expire
+    // Setup periodic check every 30 seconds to ensure token doesn't expire
     // This handles cases where user is idle and no requests are made
     const interval = setInterval(() => {
       const currentToken = localStorage.getItem('token');
@@ -327,8 +327,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const now = Date.now();
       const timeUntilExpiry = expiryTime - now;
       
-      // If token expires in less than 3 minutes, refresh it
-      if (timeUntilExpiry < 3 * 60 * 1000 && timeUntilExpiry > 0) {
+      // If token expires in less than 6 minutes, refresh it proactively
+      // This ensures we always refresh before token expires
+      if (timeUntilExpiry < 6 * 60 * 1000 && timeUntilExpiry > 0) {
         console.log('[Auth] Periodic check: Token expiring soon, refreshing...');
         refreshAuthToken()
           .then((newToken) => {
@@ -342,7 +343,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Don't logout immediately, let the timer handle it
           });
       }
-    }, 60 * 1000); // Check every 1 minute
+    }, 30 * 1000); // Check every 30 seconds for more frequent monitoring
 
     setCheckInterval(interval);
 

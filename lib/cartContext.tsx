@@ -69,7 +69,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (cart.length > 0) {
       saveCartToStorage(cart);
-    } else {
+      } else {
       // Clear localStorage if cart is empty
       localStorage.removeItem(CART_STORAGE_KEY);
     }
@@ -84,15 +84,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
-    setCart((prevCart) => {
+      setCart((prevCart) => {
       // Biarkan semua item dari berbagai restaurant bisa ditambahkan ke cart yang sama
       // Normal flow: tambah item
-      const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
+        const existingItem = prevCart.find((cartItem) => cartItem.menuId === item.menuId);
       if (existingItem) {
         return prevCart.map((cartItem) =>
-          cartItem.menuId === item.menuId
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+              cartItem.menuId === item.menuId
+                ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                : cartItem
         );
       } else {
         return [...prevCart, { ...item, quantity: 1 }];
@@ -112,16 +112,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.menuId === menuId ? { ...item, quantity } : item
-      )
-    );
+        setCart((prevCart) =>
+          prevCart.map((item) =>
+            item.menuId === menuId ? { ...item, quantity } : item
+          )
+        );
     return Promise.resolve();
   };
 
   const clearCart = async () => {
-    setCart([]);
+      setCart([]);
     localStorage.removeItem(CART_STORAGE_KEY);
     return Promise.resolve();
   };

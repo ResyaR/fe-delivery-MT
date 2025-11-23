@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 
+// Default avatar SVG as base64
+const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjgwIiBmaWxsPSIjZTVlN2U5Ii8+PHN2ZyB4PSI1MCIgeT0iNTAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiM5Y2EzYWYiPjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz48L3N2Zz4=';
+
 export default function UserMenu() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -51,9 +54,13 @@ export default function UserMenu() {
   return (
     <div className="flex items-center space-x-2 sm:space-x-4" ref={dropdownRef}>
       <img
-        src={user.avatar || "/placeholder-user.jpg"}
+        src={user.avatar || DEFAULT_AVATAR}
         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200"
         alt="Profile"
+        onError={(e) => {
+          // Fallback to default if image fails to load
+          e.target.src = DEFAULT_AVATAR;
+        }}
       />
       <div className="relative">
         <div 
@@ -61,7 +68,7 @@ export default function UserMenu() {
           onClick={() => setIsUserOpen(!isUserOpen)}
         >
           <span className="text-[#272727] text-sm sm:text-base font-medium mr-2 hidden sm:block max-w-[150px] truncate">
-            {user.email}
+            {user.fullName || user.email}
           </span>
           <svg 
             className={`w-4 h-4 transition-transform ${isUserOpen ? 'rotate-180' : ''}`}
@@ -80,15 +87,19 @@ export default function UserMenu() {
               <div className="px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center space-x-3">
                   <img
-                    src={user.avatar || "/placeholder-user.jpg"}
+                    src={user.avatar || DEFAULT_AVATAR}
                     className="w-10 h-10 rounded-full object-cover"
                     alt="Profile"
+                    onError={(e) => {
+                      // Fallback to default if image fails to load
+                      e.target.src = DEFAULT_AVATAR;
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {user.email}
+                      {user.fullName || user.email}
                     </p>
-                    <p className="text-xs text-gray-500">Member</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </div>
               </div>

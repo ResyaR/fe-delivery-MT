@@ -116,6 +116,27 @@ export default function MTTransMultiTabForm() {
     { id: 'ekspedisi', label: 'Paket Besar/Ekspedisi Lokal', icon: 'local_shipping' }
   ];
 
+  // Tab yang bisa diakses tanpa login
+  const PUBLIC_TABS = ['lacak', 'cek-ongkir'];
+
+  // Handle tab click dengan pengecekan autentikasi
+  const handleTabClick = (tabId) => {
+    // Cek apakah tab memerlukan login
+    const requiresLogin = !PUBLIC_TABS.includes(tabId);
+    
+    if (requiresLogin && !user) {
+      // Simpan URL saat ini untuk redirect setelah login
+      sessionStorage.setItem('returnUrl', `/cek-ongkir?tab=${tabId}`);
+      router.push('/signin');
+      return;
+    }
+
+    // Update active tab dan URL
+    setActiveTab(tabId);
+    const newUrl = `/cek-ongkir?tab=${tabId}`;
+    router.push(newUrl);
+  };
+
   // Set active tab from URL parameter
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -123,10 +144,23 @@ export default function MTTransMultiTabForm() {
       const tabParam = urlParams.get('tab');
       
       if (tabParam && tabs.some(tab => tab.id === tabParam)) {
+        const requiresLogin = !PUBLIC_TABS.includes(tabParam);
+        
+        // Jika tab memerlukan login dan user belum login, redirect ke login
+        if (requiresLogin && !user) {
+          sessionStorage.setItem('returnUrl', `/cek-ongkir?tab=${tabParam}`);
+          router.push('/signin');
+          return;
+        }
+        
         setActiveTab(tabParam);
+      } else if (!tabParam) {
+        // Jika tidak ada tab parameter, set default ke 'lacak'
+        setActiveTab('lacak');
+        router.push('/cek-ongkir?tab=lacak');
       }
     }
-  }, []);
+  }, [searchParams, user, router]);
 
   // Load cities and services on mount
   useEffect(() => {
@@ -1596,7 +1630,7 @@ export default function MTTransMultiTabForm() {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`flex-1 px-4 py-4 text-sm font-medium transition-colors ${
                     activeTab === tab.id
                       ? 'bg-black text-white'

@@ -16,8 +16,8 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     
     if (token) {
-      // Check jika token akan expire dalam 1 menit
-      if (isTokenExpiringSoon(token, 1)) {
+      // Check jika token akan expire dalam 5 menit - lebih agresif untuk mencegah logout
+      if (isTokenExpiringSoon(token, 5)) {
         console.log('[Axios] Token expiring soon, refreshing before request...');
         try {
           const newToken = await refreshToken();

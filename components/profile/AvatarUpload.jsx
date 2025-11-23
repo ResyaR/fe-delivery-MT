@@ -1,11 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+
+// Default avatar SVG as base64
+const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjgwIiBmaWxsPSIjZTVlN2U5Ii8+PHN2ZyB4PSI1MCIgeT0iNTAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiM5Y2EzYWYiPjxwYXRoIGQ9Ik0xMiAxMmMyLjIxIDAgNC0xLjc5IDQtNHMtMS43OS00LTQtNC00IDEuNzktNCA0IDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz48L3N2Zz4=';
 
 export default function AvatarUpload({ currentAvatar, onUpload }) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(currentAvatar);
+  const [previewUrl, setPreviewUrl] = useState(currentAvatar || DEFAULT_AVATAR);
+
+  // Update previewUrl when currentAvatar changes
+  useEffect(() => {
+    setPreviewUrl(currentAvatar || DEFAULT_AVATAR);
+  }, [currentAvatar]);
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -30,7 +37,7 @@ export default function AvatarUpload({ currentAvatar, onUpload }) {
     } catch (error) {
       console.error('Error uploading avatar:', error);
       // Revert preview on error
-      setPreviewUrl(currentAvatar);
+      setPreviewUrl(currentAvatar || DEFAULT_AVATAR);
     } finally {
       setIsUploading(false);
     }
@@ -39,29 +46,15 @@ export default function AvatarUpload({ currentAvatar, onUpload }) {
   return (
     <div className="relative group">
       <div className="h-24 w-24 rounded-full overflow-hidden relative">
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Profile"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-            <svg
-              className="h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-        )}
+        <img
+          src={previewUrl || DEFAULT_AVATAR}
+          alt="Profile"
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            // Fallback to default if image fails to load
+            e.target.src = DEFAULT_AVATAR;
+          }}
+        />
 
         {/* Upload Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

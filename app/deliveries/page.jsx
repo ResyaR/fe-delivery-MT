@@ -169,8 +169,17 @@ export default function DeliveriesPage() {
           ) : (
             // Deliveries Grid
             <>
-              <div className="mb-4 text-sm text-gray-600">
-                Menampilkan {filteredDeliveries.length} pengiriman
+              <div className="mb-6 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Menampilkan <span className="font-semibold text-gray-900">{filteredDeliveries.length}</span> pengiriman
+                </div>
+                <button
+                  onClick={() => router.push('/cek-ongkir')}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#E00000] text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  Buat Pengiriman Baru
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDeliveries.map((delivery) => (

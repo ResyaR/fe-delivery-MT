@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 
 // Daftar path yang dapat diakses tanpa login
 const PUBLIC_PATHS = ['/', '/signin', '/signup', '/verify', '/forgot-password', '/reset-password', '/auth/callback'];
 
+// Tab di /cek-ongkir yang bisa diakses tanpa login
+const PUBLIC_CEK_ONGKIR_TABS = ['cek-ongkir', 'lacak'];
+
 export default function AuthGuard({ children }) {
   const { user, isLoading, checkAuth } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isInitialCheck, setIsInitialCheck] = useState(true);
 
   // Effect untuk initial auth check
@@ -38,7 +42,15 @@ export default function AuthGuard({ children }) {
 
     const handleRouteProtection = async () => {
       const token = localStorage.getItem('token');
-      const isPublicPath = PUBLIC_PATHS.includes(pathname);
+      
+      // Cek apakah path adalah public path
+      let isPublicPath = PUBLIC_PATHS.includes(pathname);
+      
+      // Jika path adalah /cek-ongkir, cek tab parameter
+      if (pathname === '/cek-ongkir') {
+        const tab = searchParams?.get('tab');
+        isPublicPath = tab ? PUBLIC_CEK_ONGKIR_TABS.includes(tab) : false;
+      }
 
       // Jika masih dalam initial loading atau check, tunggu
       if (isInitialCheck || isLoading) return;
@@ -66,7 +78,7 @@ export default function AuthGuard({ children }) {
     };
 
     handleRouteProtection();
-  }, [user, isLoading, pathname, router, isInitialCheck, checkAuth]);
+  }, [user, isLoading, pathname, searchParams, router, isInitialCheck, checkAuth]);
 
   // Tampilkan children hanya jika:
   // 1. Path adalah public path, atau
@@ -80,7 +92,16 @@ export default function AuthGuard({ children }) {
     );
   }
 
-  if (!PUBLIC_PATHS.includes(pathname) && !user) {
+  // Cek apakah path adalah public path
+  let isPublicPath = PUBLIC_PATHS.includes(pathname);
+  
+  // Jika path adalah /cek-ongkir, cek tab parameter
+  if (pathname === '/cek-ongkir') {
+    const tab = searchParams?.get('tab');
+    isPublicPath = tab ? PUBLIC_CEK_ONGKIR_TABS.includes(tab) : false;
+  }
+
+  if (!isPublicPath && !user) {
     return null; // atau loading indicator
   }
 
