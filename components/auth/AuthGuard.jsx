@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 
@@ -10,7 +10,7 @@ const PUBLIC_PATHS = ['/', '/signin', '/signup', '/verify', '/forgot-password', 
 // Tab di /cek-ongkir yang bisa diakses tanpa login
 const PUBLIC_CEK_ONGKIR_TABS = ['cek-ongkir', 'lacak'];
 
-export default function AuthGuard({ children }) {
+function AuthGuardContent({ children }) {
   const { user, isLoading, checkAuth } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -106,4 +106,16 @@ export default function AuthGuard({ children }) {
   }
 
   return children;
+}
+
+export default function AuthGuard({ children }) {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E46329]"></div>
+      </div>
+    }>
+      <AuthGuardContent>{children}</AuthGuardContent>
+    </Suspense>
+  );
 }
