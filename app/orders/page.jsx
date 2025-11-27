@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import OrderAPI from "@/lib/orderApi";
 import MTTransFoodHeader from "@/components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "@/components/food/MTTransFoodFooter";
 
-export default function OrdersPage() {
+function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -310,6 +310,18 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E00000]"></div>
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   );
 }
 

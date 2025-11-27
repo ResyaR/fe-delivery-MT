@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
@@ -8,7 +8,7 @@ import RestaurantAPI from "@/lib/restaurantApi";
 import MTTransFoodHeader from "../../../components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "../../../components/food/MTTransFoodFooter";
 
-export default function AllFoodPage() {
+function AllFoodContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -282,5 +282,17 @@ export default function AllFoodPage() {
 
       <MTTransFoodFooter />
     </div>
+  );
+}
+
+export default function AllFoodPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E00000]"></div>
+      </div>
+    }>
+      <AllFoodContent />
+    </Suspense>
   );
 }
