@@ -1,9 +1,13 @@
 import { API_BASE_URL } from './config';
 
 export const RestaurantAPI = {
-  async getAllRestaurants() {
+  async getAllRestaurants(city?: string) {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurants?status=active`);
+      let url = `${API_BASE_URL}/restaurants?status=active`;
+      if (city) {
+        url += `&city=${encodeURIComponent(city)}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch restaurants');
       
       const result = await response.json();

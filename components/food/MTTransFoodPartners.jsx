@@ -1,31 +1,61 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/authContext';
 import RestaurantAPI from '@/lib/restaurantApi';
+import { addressAPI } from '@/lib/addressApi';
 
 export default function MTTransFoodPartners() {
   const router = useRouter();
+  const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userCity, setUserCity] = useState(null);
+  const hasLoadedRef = useRef(false);
+  const isDetectingRef = useRef(false);
 
+  // Detect user location and load restaurants in one effect
   useEffect(() => {
-    loadRestaurants();
-  }, []);
+    // Prevent multiple calls
+    if (hasLoadedRef.current || isDetectingRef.current) return;
+    
+    const detectAndLoad = async () => {
+      isDetectingRef.current = true;
+      let city = null;
 
-  const loadRestaurants = async () => {
-    try {
-      setIsLoading(true);
-      const data = await RestaurantAPI.getAllRestaurants();
-      setRestaurants(data.slice(0, 6)); // Show top 6
-    } catch (error) {
-      console.error('Error loading restaurants:', error);
-      // Fallback to empty array
-      setRestaurants([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (user) {
+        try {
+          const addresses = await addressAPI.getAll();
+          const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
+          
+          if (defaultAddress && defaultAddress.city) {
+            city = defaultAddress.city;
+          }
+        } catch (error) {
+          console.error('Error detecting location:', error);
+        }
+      }
+
+      // Set city and load restaurants
+      setUserCity(city);
+      
+      try {
+        setIsLoading(true);
+        const data = await RestaurantAPI.getAllRestaurants(city || undefined);
+        setRestaurants(data.slice(0, 6)); // Show top 6
+      } catch (error) {
+        console.error('Error loading restaurants:', error);
+        setRestaurants([]);
+      } finally {
+        setIsLoading(false);
+        hasLoadedRef.current = true;
+        isDetectingRef.current = false;
+      }
+    };
+
+    detectAndLoad();
+  }, [user]);
 
   const handleSeeAll = () => {
     router.push('/food/all');
@@ -45,7 +75,17 @@ export default function MTTransFoodPartners() {
   return (
     <section id="food-partners">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-4xl font-bold">Food Partners</h2>
+        <div className="flex-1">
+          <h2 className="text-4xl font-bold mb-2">Food Partners</h2>
+          {userCity && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="material-symbols-outlined text-[#E00000] text-base">location_on</span>
+              <span>
+                Menampilkan restaurant di <span className="font-semibold text-[#E00000]">{userCity}</span>
+              </span>
+            </div>
+          )}
+        </div>
         <button 
           onClick={handleSeeAll}
           className="text-[#E00000] font-semibold hover:underline flex items-center gap-2 transition-colors"
@@ -125,7 +165,23 @@ export default function MTTransFoodPartners() {
           <div className="col-span-3 text-center py-16">
             <span className="material-symbols-outlined text-8xl text-gray-300">restaurant</span>
             <h3 className="text-2xl font-bold text-gray-700 mt-4">Tidak ada restaurant</h3>
-            <p className="text-gray-500 mt-2">Belum ada restaurant yang tersedia saat ini</p>
+            <p className="text-gray-500 mt-2">
+              {userCity 
+                ? `Belum ada restaurant yang tersedia di ${userCity} saat ini` 
+                : 'Belum ada restaurant yang tersedia saat ini'}
+            </p>
+            {userCity && (
+              <button
+                onClick={async () => {
+                  setUserCity(null);
+                  const data = await RestaurantAPI.getAllRestaurants();
+                  setRestaurants(data.slice(0, 6));
+                }}
+                className="mt-4 px-6 py-2 bg-[#E00000] text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
+              >
+                Lihat Semua Restaurant
+              </button>
+            )}
           </div>
         )}
       </div>

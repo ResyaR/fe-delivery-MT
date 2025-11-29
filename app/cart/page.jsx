@@ -20,10 +20,6 @@ export default function CartPage() {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(15000);
   const [estimatedTime, setEstimatedTime] = useState('30-45 menit');
-  const [deliveryType, setDeliveryType] = useState('regular'); // regular, express, scheduled
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [scheduleTimeSlot, setScheduleTimeSlot] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -35,24 +31,80 @@ export default function CartPage() {
   const [updatingItem, setUpdatingItem] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
-  // Load saved addresses from localStorage
+  // Load saved addresses from API
   const [savedAddresses, setSavedAddresses] = useState([]);
 
-  useEffect(() => {
-    // Load saved addresses from localStorage
-    const saved = localStorage.getItem('user_addresses');
-    if (saved) {
-      try {
-        const addresses = JSON.parse(saved);
-        setSavedAddresses(addresses);
-      } catch (error) {
-        console.error('Error loading saved addresses:', error);
-        setSavedAddresses([]);
-      }
-    } else {
+  // Load addresses from API
+  const loadAddresses = async () => {
+    if (!user) return;
+    try {
+      const { addressAPI } = await import('@/lib/addressApi');
+      const addresses = await addressAPI.getAll();
+      setSavedAddresses(addresses);
+      return addresses;
+    } catch (error) {
+      console.error('Error loading saved addresses:', error);
       setSavedAddresses([]);
+      return [];
     }
-  }, []);
+  };
+
+  // Load addresses on mount and when user changes
+  useEffect(() => {
+    loadAddresses();
+  }, [user]);
+
+  // Auto-select default address when addresses are loaded
+  useEffect(() => {
+    if (savedAddresses.length > 0) {
+      const defaultAddress = savedAddresses.find(addr => addr.isDefault);
+      if (defaultAddress) {
+        // Always update to default address if it exists
+        setSelectedAddress(defaultAddress);
+      } else if (!selectedAddress) {
+        // If no default, select first address if nothing is selected
+        setSelectedAddress(savedAddresses[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAddresses]);
+
+  // Refresh addresses when page becomes visible (user returns from profile page)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && user) {
+        const addresses = await loadAddresses();
+        // Auto-select default address when returning to page
+        if (addresses.length > 0) {
+          const defaultAddress = addresses.find(addr => addr.isDefault);
+          if (defaultAddress) {
+            setSelectedAddress(defaultAddress);
+          }
+        }
+      }
+    };
+
+    const handleFocus = async () => {
+      if (user) {
+        const addresses = await loadAddresses();
+        // Auto-select default address when window gets focus
+        if (addresses.length > 0) {
+          const defaultAddress = addresses.find(addr => addr.isDefault);
+          if (defaultAddress) {
+            setSelectedAddress(defaultAddress);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -139,48 +191,50 @@ export default function CartPage() {
     }
   };
 
-  const handleSelectAddress = (address) => {
+  const handleSelectAddress = async (address) => {
     setSelectedAddress(address);
     
-    // Save new address to localStorage if it doesn't exist
-    if (address) {
-      const existingIndex = savedAddresses.findIndex(
-        addr => addr.label === address.label && addr.street === address.street
-      );
-      
-      if (existingIndex === -1) {
-        // New address, add to saved addresses
-        const updatedAddresses = [...savedAddresses, address];
-        setSavedAddresses(updatedAddresses);
-        localStorage.setItem('user_addresses', JSON.stringify(updatedAddresses));
+    // If address has an id, it's already saved. Otherwise, save it to backend
+    if (address && !address.id) {
+      try {
+        const { addressAPI } = await import('@/lib/addressApi');
+        const savedAddress = await addressAPI.create({
+          label: address.label || 'Alamat Baru',
+          recipientName: address.recipientName,
+          street: address.street,
+          city: address.city,
+          cityId: address.cityId,
+          province: address.province,
+          postalCode: address.postalCode,
+          zone: address.zone,
+          note: address.note,
+        });
+        // Reload addresses
+        const addresses = await addressAPI.getAll();
+        setSavedAddresses(addresses);
+        setSelectedAddress(savedAddress);
+      } catch (error) {
+        console.error('Error saving address:', error);
+        // Continue anyway, address is still selected
       }
     }
     
-    // Calculate delivery fee based on zone
-    const baseFee = 15000;
-    const zoneMultiplier = address.zone ? address.zone * 2000 : 1; // Zone 1 = 2000, Zone 2 = 4000, etc
-    setDeliveryFee(baseFee + zoneMultiplier);
+    // Food delivery is within one city, flat rate
+    const flatFee = 15000; // Flat rate untuk pengiriman dalam satu kota
+    setDeliveryFee(flatFee);
     
-    // Calculate estimated time based on zone
-    const baseTime = 30;
-    const zoneTime = address.zone ? address.zone * 5 : 0;
-    setEstimatedTime(`${baseTime + zoneTime}-${baseTime + zoneTime + 15} menit`);
+    // Estimated time for same city delivery
+    setEstimatedTime('30-45 menit');
   };
 
-  // Update delivery fee when delivery type changes
+  // Update delivery fee when address changes (flat rate for same city food delivery)
   useEffect(() => {
     if (selectedAddress) {
-      const baseFee = 15000;
-      const zoneMultiplier = selectedAddress.zone ? selectedAddress.zone * 2000 : 0;
-      let fee = baseFee + zoneMultiplier;
-      
-      if (deliveryType === 'express') {
-        fee = fee * 1.5; // Express is 50% more expensive
-      }
-      
-      setDeliveryFee(fee);
+      // Food delivery is within one city, always flat rate
+      setDeliveryFee(15000);
+      setEstimatedTime('30-45 menit');
     }
-  }, [deliveryType, selectedAddress]);
+  }, [selectedAddress]);
 
   if (loading) {
     return (
@@ -195,7 +249,9 @@ export default function CartPage() {
   }
 
   const subtotal = getTotalPrice();
-  const total = subtotal + deliveryFee - discount;
+  // Biaya aplikasi 10%
+  const appFee = subtotal * 0.1;
+  const total = subtotal + deliveryFee + appFee - discount;
 
   // Kelompokkan item berdasarkan restaurant
   const itemsByRestaurant = cart.reduce((acc, item) => {
@@ -261,6 +317,9 @@ export default function CartPage() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
+                          {selectedAddress.recipientName && (
+                            <p className="text-lg font-bold text-gray-900 mb-2">{selectedAddress.recipientName}</p>
+                          )}
                           <p className="font-bold text-gray-900 mb-1">{selectedAddress.label}</p>
                           <p className="text-sm text-gray-600">
                             {selectedAddress.street}, {selectedAddress.city}, {selectedAddress.province} {selectedAddress.postalCode}
@@ -391,104 +450,6 @@ export default function CartPage() {
                   );
                 })}
 
-                {/* Delivery Type & Schedule Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Jenis Pengiriman</h2>
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => {
-                          setDeliveryType('regular');
-                          setScheduledDate('');
-                          setScheduledTime('');
-                          setScheduleTimeSlot('');
-                        }}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          deliveryType === 'regular'
-                            ? 'border-[#E00000] bg-red-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-900 mb-1">Regular</div>
-                        <div className="text-sm text-gray-600">30-45 menit</div>
-                        <div className="text-xs text-gray-500 mt-1">Standar</div>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setDeliveryType('express');
-                          setScheduledDate('');
-                          setScheduledTime('');
-                          setScheduleTimeSlot('');
-                        }}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          deliveryType === 'express'
-                            ? 'border-[#E00000] bg-red-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-900 mb-1">Express</div>
-                        <div className="text-sm text-gray-600">15-25 menit</div>
-                        <div className="text-xs text-gray-500 mt-1">+50% ongkir</div>
-                      </button>
-
-                      <button
-                        onClick={() => setDeliveryType('scheduled')}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          deliveryType === 'scheduled'
-                            ? 'border-[#E00000] bg-red-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="font-semibold text-gray-900 mb-1">Jadwal</div>
-                        <div className="text-sm text-gray-600">Pilih waktu</div>
-                        <div className="text-xs text-gray-500 mt-1">Fleksibel</div>
-                      </button>
-                    </div>
-
-                    {deliveryType === 'scheduled' && (
-                      <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-lg">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Tanggal Pengiriman *
-                          </label>
-                          <input
-                            type="date"
-                            value={scheduledDate}
-                            onChange={(e) => setScheduledDate(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Waktu Pengiriman *
-                          </label>
-                          <select
-                            value={scheduleTimeSlot}
-                            onChange={(e) => {
-                              setScheduleTimeSlot(e.target.value);
-                              const [start, end] = e.target.value.split('-');
-                              setScheduledTime(start);
-                            }}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                            required
-                          >
-                            <option value="">Pilih waktu</option>
-                            <option value="09:00-12:00">09:00 - 12:00</option>
-                            <option value="12:00-15:00">12:00 - 15:00</option>
-                            <option value="15:00-18:00">15:00 - 18:00</option>
-                            <option value="18:00-21:00">18:00 - 21:00</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Notes Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Catatan</h2>
@@ -585,12 +546,16 @@ export default function CartPage() {
                       <span className="font-semibold">Rp {subtotal.toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between text-gray-700">
+                      <span>Biaya Aplikasi (10%)</span>
+                      <span className="font-semibold">Rp {appFee.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700">
                       <span>Biaya Pengantaran</span>
                       <span className="font-semibold">Rp {deliveryFee.toLocaleString('id-ID')}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>Diskon</span>
+                        <span>Diskon Promo</span>
                         <span className="font-semibold">- Rp {discount.toLocaleString('id-ID')}</span>
                       </div>
                     )}
@@ -606,18 +571,8 @@ export default function CartPage() {
                     onClick={() => {
                       if (!selectedAddress) return;
                       
-                      // Validate scheduled delivery
-                      if (deliveryType === 'scheduled' && (!scheduledDate || !scheduleTimeSlot)) {
-                        alert('Pilih tanggal dan waktu pengiriman terlebih dahulu');
-                        return;
-                      }
-                      
                       // Save delivery data to localStorage
                       const deliveryData = {
-                        deliveryType,
-                        scheduledDate,
-                        scheduledTime,
-                        scheduleTimeSlot,
                         deliveryFee,
                         restaurantNotes,
                         driverNotes,
@@ -627,7 +582,7 @@ export default function CartPage() {
                       
                       router.push('/checkout');
                     }}
-                    disabled={!selectedAddress || (deliveryType === 'scheduled' && (!scheduledDate || !scheduleTimeSlot))}
+                    disabled={!selectedAddress}
                     className="w-full bg-[#E00000] text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {selectedAddress ? 'Lanjut ke Pembayaran' : 'Pilih Alamat Dulu'}

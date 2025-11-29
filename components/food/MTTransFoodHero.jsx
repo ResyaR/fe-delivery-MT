@@ -13,10 +13,10 @@ export default function MTTransFoodHero() {
     <section className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
       <div className="space-y-4 md:space-y-6 text-center md:text-left">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
-          Apa Kata Mereka Tentang Layanan Food Delivery Kami?
+          Makanan Favoritmu, Dikirim dengan Cepat dan Hangat
         </h1>
         <p className="text-base md:text-xl text-gray-600">
-          Cepat, hangat, dan aman sampai ke pelanggan.
+          Pesan makanan dari restaurant terbaik di kotamu. Cepat, hangat, dan aman sampai ke rumah.
         </p>
         <button 
           onClick={handleOrderNow}
@@ -25,10 +25,14 @@ export default function MTTransFoodHero() {
           Pesan Sekarang
         </button>
       </div>
-      <div 
-        className="w-full h-auto aspect-video rounded-xl bg-cover bg-center shadow-lg" 
-        style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCiTg-TAz0auY4vLqxolBw84Jyrq20gkPM2VpCdHihyOTasJHbcBzCguQfdwi4roanUJF6UF5acxpegLeoJ9Yp83GvgXwTEFefCXx4dIg6HVzjITX9SfUSizo52WRxw6Z2gfJe_zxLdmvJ1MFLFVekW7j_fwy2hc5usg0lgBqSf2JwWot1nDkV9YRCcGx0Ak4X9cKomtmGX88yi-NfrCFxVEMn2KVFiViGv5XYCL6AGYf5W8-4MZQ-XHVpde_LRwQ4qM57ZzIuz50A")'}}
-      />
+      <div className="w-full h-auto aspect-video rounded-xl overflow-hidden shadow-lg">
+        <img 
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=600&fit=crop"
+          alt="Food Delivery"
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
     </section>
   );
 }

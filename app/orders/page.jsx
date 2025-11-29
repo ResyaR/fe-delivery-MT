@@ -271,7 +271,28 @@ function OrdersContent() {
               {/* Delivery Address */}
               <div className="border-t border-gray-200 pt-4">
                 <p className="text-sm text-gray-600 mb-2">Alamat Pengantaran</p>
+                <div className="space-y-1">
+                  {selectedOrder.customerName && (
+                    <p className="text-lg font-bold text-gray-900">{selectedOrder.customerName}</p>
+                  )}
+                  {selectedOrder.deliveryAddressLabel && (
+                    <p className="text-gray-900 font-semibold">{selectedOrder.deliveryAddressLabel}</p>
+                  )}
                 <p className="text-gray-900">{selectedOrder.deliveryAddress}</p>
+                  {(selectedOrder.deliveryCity || selectedOrder.deliveryProvince) && (
+                    <p className="text-gray-600">
+                      {selectedOrder.deliveryCity}{selectedOrder.deliveryCity && selectedOrder.deliveryProvince ? ', ' : ''}{selectedOrder.deliveryProvince} {selectedOrder.deliveryPostalCode || ''}
+                    </p>
+                  )}
+                  {selectedOrder.deliveryZone && (
+                    <p className="text-sm text-[#E00000] font-semibold">Zona {selectedOrder.deliveryZone}</p>
+                  )}
+                  {selectedOrder.customerPhone && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      <span className="material-symbols-outlined text-sm align-middle">phone</span> {selectedOrder.customerPhone}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Notes */}
@@ -289,6 +310,12 @@ function OrdersContent() {
                     <span>Subtotal</span>
                     <span className="font-medium">
                       Rp {parseInt(selectedOrder.subtotal).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Biaya Aplikasi (10%)</span>
+                    <span className="font-medium">
+                      Rp {Math.round(parseInt(selectedOrder.subtotal) * 0.1).toLocaleString('id-ID')}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-700">

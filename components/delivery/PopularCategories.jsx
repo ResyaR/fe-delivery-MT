@@ -41,26 +41,22 @@ const PopularCategories = () => {
     {
       name: "Kirim Barang",
       subtitle: "(dokumen, paket kecil)",
-      icon: "🛵",
-      bgColor: "bg-green-100"
+      icon: "🛵"
     },
     {
       name: "Makanan & Minuman",
       subtitle: "",
-      icon: "🍔",
-      bgColor: "bg-orange-100"
+      icon: "🍔"
     },
     {
       name: "Titip Belanja",
       subtitle: "",
-      icon: "🛒",
-      bgColor: "bg-blue-100"
+      icon: "🛒"
     },
     {
       name: "Paket Besar / Ekspedisi Lokal",
       subtitle: "",
-      icon: "🚚",
-      bgColor: "bg-purple-100"
+      icon: "🚚"
     }
   ]
 
@@ -83,25 +79,25 @@ const PopularCategories = () => {
             className="flex flex-col items-center bg-white text-center p-6 md:p-8 rounded-3xl border-0 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-red-300"
             aria-label={`${category.name} service`}
           >
-            {/* Icon with colored background */}
-            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full ${category.bgColor} flex items-center justify-center mb-4 md:mb-6 overflow-hidden`}>
+            {/* Icon */}
+            <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-4 md:mb-6">
               {category.name === "Kirim Barang" ? (
                 <img 
                   src="/delivery-scooter.png" 
                   alt="Delivery Scooter" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : category.name === "Titip Belanja" ? (
                 <img 
                   src="/shopping-cart.png" 
                   alt="Shopping Cart" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : category.name === "Paket Besar / Ekspedisi Lokal" ? (
                 <img 
                   src="/delivery-gift-boxes.png" 
                   alt="Delivery Gift Boxes" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <span className="text-3xl md:text-4xl">{category.icon}</span>

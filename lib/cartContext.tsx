@@ -55,33 +55,46 @@ const loadCartFromStorage = (): CartItem[] => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [previousUser, setPreviousUser] = useState<any>(null);
+  const { user, loading: authLoading } = useAuth();
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount (only once, before auth check)
   useEffect(() => {
-    const savedCart = loadCartFromStorage();
-    if (savedCart.length > 0) {
-      setCart(savedCart);
+    if (!isInitialized) {
+      const savedCart = loadCartFromStorage();
+      if (savedCart && Array.isArray(savedCart)) {
+        setCart(savedCart);
+      }
+      setIsInitialized(true);
     }
-  }, []);
+  }, [isInitialized]);
 
-  // Save cart to localStorage whenever cart changes
+  // Save cart to localStorage whenever cart changes (after initialization)
   useEffect(() => {
-    if (cart.length > 0) {
-      saveCartToStorage(cart);
+    if (isInitialized) {
+      if (cart.length > 0) {
+        saveCartToStorage(cart);
       } else {
-      // Clear localStorage if cart is empty
-      localStorage.removeItem(CART_STORAGE_KEY);
+        // Keep cart in localStorage even if empty, so we know it was initialized
+        // Only remove if explicitly cleared
+      }
     }
-  }, [cart]);
+  }, [cart, isInitialized]);
 
-  // Clear cart when user logs out
+  // Track previous user to detect logout
   useEffect(() => {
-    if (!user) {
+    setPreviousUser(user);
+  }, [user]);
+
+  // Clear cart when user explicitly logs out (user changed from non-null to null)
+  useEffect(() => {
+    if (!authLoading && isInitialized && previousUser && !user) {
+      // User was logged in before but now null = logout, clear cart
       setCart([]);
       localStorage.removeItem(CART_STORAGE_KEY);
     }
-  }, [user]);
+  }, [user, previousUser, authLoading, isInitialized]);
 
   const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
       setCart((prevCart) => {

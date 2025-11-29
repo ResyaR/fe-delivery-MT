@@ -140,6 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
         localStorage.removeItem('foodCart');
+        localStorage.removeItem('mt_trans_cart'); // Clear cart dengan key yang benar
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
       }

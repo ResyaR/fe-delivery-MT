@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense } from 'react';
-import MTTransCekOngkirHeader from '../../components/cek-ongkir/MTTransCekOngkirHeader';
+import MTTransHeader from '@/components/delivery/MTTransHeader';
 import MTTransMultiTabForm from '../../components/cek-ongkir/MTTransMultiTabForm';
-import MTTransCekOngkirFooter from '../../components/cek-ongkir/MTTransCekOngkirFooter';
+import MTTransFooter from '@/components/delivery/MTTransFooter';
 
 export default function CekOngkirPage() {
   return (
@@ -28,13 +28,13 @@ export default function CekOngkirPage() {
         }
       `}</style>
       
-      <MTTransCekOngkirHeader />
-      <div className="pt-20">
+      <MTTransHeader />
+      <main className="pt-20">
         <Suspense fallback={<div className="flex justify-center items-center h-64">Loading...</div>}>
           <MTTransMultiTabForm />
         </Suspense>
-      </div>
-      <MTTransCekOngkirFooter />
+      </main>
+      <MTTransFooter />
     </div>
   );
 }

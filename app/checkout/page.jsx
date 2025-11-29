@@ -16,9 +16,6 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
   const [formData, setFormData] = useState({
-    customerName: "",
-    customerPhone: "",
-    deliveryAddress: "",
     notes: "",
   });
 
@@ -36,23 +33,9 @@ export default function CheckoutPage() {
       try {
         const data = JSON.parse(savedDeliveryData);
         setDeliveryData(data);
-        if (data.address) {
-          setFormData(prev => ({
-            ...prev,
-            deliveryAddress: `${data.address.street}, ${data.address.city}, ${data.address.province} ${data.address.postalCode || ''}`.trim(),
-          }));
-        }
       } catch (error) {
         console.error('Error parsing delivery data:', error);
       }
-    }
-    
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        customerName: user.fullName || user.username || "",
-        customerPhone: user.phone || "",
-      }));
     }
   }, [user, loading, cart, router]);
 
@@ -64,8 +47,9 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.deliveryAddress.trim()) {
-      alert('Mohon isi alamat pengantaran');
+    if (!deliveryData || !deliveryData.address) {
+      alert('Mohon pilih alamat pengantaran terlebih dahulu');
+      router.push('/cart');
       return;
     }
 
@@ -87,6 +71,7 @@ export default function CheckoutPage() {
           quantity: item.quantity,
         })),
         deliveryAddress: deliveryData.address.street,
+        deliveryAddressLabel: deliveryData.address.label,
         deliveryCity: deliveryData.address.city,
         deliveryProvince: deliveryData.address.province,
         deliveryPostalCode: deliveryData.address.postalCode || '',
@@ -96,8 +81,8 @@ export default function CheckoutPage() {
         scheduledTime: deliveryData.scheduledTime || undefined,
         scheduleTimeSlot: deliveryData.scheduleTimeSlot || undefined,
         notes: `${formData.notes || ''}${deliveryData.restaurantNotes ? `\nCatatan Restaurant: ${deliveryData.restaurantNotes}` : ''}${deliveryData.driverNotes ? `\nCatatan Driver: ${deliveryData.driverNotes}` : ''}`.trim() || undefined,
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
+        customerName: deliveryData.address?.recipientName || user?.fullName || user?.username || '',
+        customerPhone: user?.phone || '',
         deliveryFee: deliveryData.deliveryFee || 10000,
       };
 
@@ -137,7 +122,9 @@ export default function CheckoutPage() {
   }
 
   const deliveryFee = deliveryData?.deliveryFee || 10000;
-  const total = getTotalPrice() + deliveryFee;
+  const subtotal = getTotalPrice();
+  const appFee = subtotal * 0.1; // Biaya aplikasi 10%
+  const total = subtotal + deliveryFee + appFee;
 
   return (
     <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen">
@@ -159,71 +146,43 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Checkout Form */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Customer Information */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Informasi Penerima</h2>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nama Lengkap *
-                      </label>
-                      <input
-                        type="text"
-                        name="customerName"
-                        value={formData.customerName}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                        placeholder="Masukkan nama lengkap"
-                      />
+                {/* Delivery Address Info */}
+                {deliveryData?.address && (
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Alamat Pengantaran</h2>
+                    <div className="space-y-2">
+                      {deliveryData.address.recipientName && (
+                        <p className="text-lg font-bold text-gray-900">
+                          {deliveryData.address.recipientName}
+                        </p>
+                      )}
+                      <p className="text-gray-700">
+                        <span className="font-semibold">{deliveryData.address.label}</span>
+                        {deliveryData.address.isDefault && (
+                          <span className="ml-2 px-2 py-0.5 bg-[#E00000] text-white text-xs rounded-full font-semibold">
+                            Default
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-gray-600">
+                        {deliveryData.address.street}, {deliveryData.address.city}, {deliveryData.address.province} {deliveryData.address.postalCode || ''}
+                      </p>
+                      {deliveryData.address.zone && (
+                        <p className="text-sm text-[#E00000] font-semibold">Zona {deliveryData.address.zone}</p>
+                      )}
+                      {deliveryData.address.note && (
+                        <p className="text-sm text-gray-500 mt-2">Catatan: {deliveryData.address.note}</p>
+                      )}
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nomor Telepon *
-                      </label>
-                      <input
-                        type="tel"
-                        name="customerPhone"
-                        value={formData.customerPhone}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                        placeholder="081234567890"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Alamat Pengantaran *
-                      </label>
-                      <textarea
-                        name="deliveryAddress"
-                        value={formData.deliveryAddress}
-                        onChange={handleInputChange}
-                        required
-                        rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                        placeholder="Jl. Contoh No. 123, RT/RW, Kelurahan, Kecamatan, Kota"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Catatan (Opsional)
-                      </label>
-                      <textarea
-                        name="notes"
-                        value={formData.notes}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                        placeholder="Contoh: Tanpa cabe, Extra sambal, dll"
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => router.push('/cart')}
+                      className="mt-4 text-[#E00000] hover:underline text-sm font-semibold"
+                    >
+                      Ubah Alamat
+                    </button>
                   </div>
-                </div>
+                )}
 
                 {/* Order Items */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -277,7 +236,11 @@ export default function CheckoutPage() {
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-gray-700">
                       <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} item)</span>
-                      <span className="font-semibold">Rp {getTotalPrice().toLocaleString('id-ID')}</span>
+                      <span className="font-semibold">Rp {subtotal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700">
+                      <span>Biaya Aplikasi (10%)</span>
+                      <span className="font-semibold">Rp {appFee.toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between text-gray-700">
                       <span>Biaya Pengantaran</span>

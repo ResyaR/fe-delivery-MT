@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { useCart } from '@/lib/cartContext';
 import UserMenu from '../main/UserMenu';
 
 export default function MTTransHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { cart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,16 +135,22 @@ export default function MTTransHeader() {
         
         <nav className="hidden md:flex items-center justify-center gap-16 font-medium text-gray-700 flex-1">
           <button 
-            className="text-[#E00000] font-bold hover:underline"
+            className={`${pathname === '/' ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer`}
             onClick={() => router.push('/')}
           >
             Home
           </button>
           <button 
-            className="hover:text-[#E00000] transition-colors cursor-pointer"
+            className={`${pathname?.startsWith('/food') ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer`}
             onClick={() => router.push('/food')}
           >
             Food
+          </button>
+          <button 
+            className={`${pathname === '/pricing' ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer`}
+            onClick={() => router.push('/pricing')}
+          >
+            Pricing
           </button>
           <div className="relative" ref={servicesDropdownRef}>
             <button 
@@ -225,7 +232,7 @@ export default function MTTransHeader() {
         <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
           <div className="px-4 py-3 space-y-1">
             <button 
-              className="w-full text-left py-3 text-[#E00000] font-bold border-b border-gray-100"
+              className={`w-full text-left py-3 ${pathname === '/' ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} border-b border-gray-100`}
               onClick={() => {
                 router.push('/');
                 setIsMenuOpen(false);
@@ -238,10 +245,20 @@ export default function MTTransHeader() {
                 router.push('/food');
                 setIsMenuOpen(false);
               }}
-              className="w-full text-left py-3 text-gray-700 hover:text-[#E00000] transition-colors border-b border-gray-100 flex items-center gap-2"
+              className={`w-full text-left py-3 ${pathname?.startsWith('/food') ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} transition-colors border-b border-gray-100 flex items-center gap-2`}
             >
               <span className="material-symbols-outlined text-lg">restaurant</span>
               <span>Order Food</span>
+            </button>
+            <button 
+              onClick={() => {
+                router.push('/pricing');
+                setIsMenuOpen(false);
+              }}
+              className={`w-full text-left py-3 ${pathname === '/pricing' ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} transition-colors border-b border-gray-100 flex items-center gap-2`}
+            >
+              <span className="material-symbols-outlined text-lg">payments</span>
+              <span>Pricing</span>
             </button>
             <div>
               <button 

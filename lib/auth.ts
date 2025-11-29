@@ -186,8 +186,9 @@ export const logout = async (): Promise<void> => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     
-    // Clear cart data when user logs out
+    // Clear cart data when user logs out (both old and new key)
     localStorage.removeItem('foodCart');
+    localStorage.removeItem('mt_trans_cart');
     
     // Remove Authorization header
     delete api.defaults.headers.common['Authorization'];

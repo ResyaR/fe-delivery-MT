@@ -19,9 +19,9 @@ export default function FoodPage() {
       
       <main className="container mx-auto px-6 pt-24 pb-16 space-y-24">
         <MTTransFoodHero />
+        <MTTransFoodCategories />
         <MTTransFoodPartners />
         <MTTransFoodPromo />
-        <MTTransFoodCategories />
         <MTTransFoodTestimonials />
         <MTTransFoodWhyChoose />
       </main>

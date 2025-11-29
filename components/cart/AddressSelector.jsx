@@ -13,14 +13,17 @@ export default function AddressSelector({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: '',
+    recipientName: '',
     street: '',
     city: '',
     cityId: null,
     province: '',
     postalCode: '',
     zone: null,
-    note: ''
+    note: '',
+    isDefault: false
   });
+  const [customLabel, setCustomLabel] = useState('');
 
   // City autocomplete state
   const [citySearch, setCitySearch] = useState('');
@@ -86,19 +89,38 @@ export default function AddressSelector({
       return;
     }
     
+    // Use custom label if "Lainnya" is selected
+    const finalLabel = newAddress.label === 'Lainnya' ? customLabel : newAddress.label;
+    
+    if (!finalLabel) {
+      alert('Pilih atau masukkan label alamat');
+      return;
+    }
+    
+    if (!newAddress.recipientName.trim()) {
+      alert('Masukkan nama penerima');
+      return;
+    }
+    
     // Address will be saved in parent component (cart/page.jsx) via onSelectAddress
-    onSelectAddress(newAddress);
+    onSelectAddress({
+      ...newAddress,
+      label: finalLabel
+    });
     setShowAddForm(false);
     setNewAddress({
       label: '',
+      recipientName: '',
       street: '',
       city: '',
       cityId: null,
       province: '',
       postalCode: '',
       zone: null,
-      note: ''
+      note: '',
+      isDefault: false
     });
+    setCustomLabel('');
     setCitySearch('');
   };
 
@@ -150,12 +172,24 @@ export default function AddressSelector({
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-bold text-gray-900 mb-1">{address.label}</p>
+                          {address.recipientName && (
+                            <p className="text-base font-bold text-gray-900 mb-1">
+                              {address.recipientName}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-bold text-gray-900">{address.label}</p>
+                            {address.isDefault && (
+                              <span className="px-2 py-0.5 bg-[#E00000] text-white text-xs rounded-full font-semibold">
+                                Default
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600">
                             {address.street}, {address.city}, {address.province} {address.postalCode}
                           </p>
                           {address.zone && (
-                            <p className="text-xs text-[#E00000] mt-1">Zona {address.zone}</p>
+                            <p className="text-xs text-[#E00000] mt-1 font-semibold">Zona {address.zone}</p>
                           )}
                           {address.note && (
                             <p className="text-sm text-gray-500 mt-1">Note: {address.note}</p>
@@ -190,15 +224,52 @@ export default function AddressSelector({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Label Alamat *
+                    Nama Penerima *
                   </label>
                   <input
                     type="text"
-                    value={newAddress.label}
-                    onChange={(e) => setNewAddress({...newAddress, label: e.target.value})}
-                    placeholder="Rumah, Kantor, dll"
+                    value={newAddress.recipientName}
+                    onChange={(e) => setNewAddress({...newAddress, recipientName: e.target.value})}
+                    placeholder="Masukkan nama penerima"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Label Alamat *
+                  </label>
+                  <select
+                    value={newAddress.label}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === 'Lainnya') {
+                        setNewAddress({...newAddress, label: 'Lainnya'});
+                      } else {
+                        setNewAddress({...newAddress, label: value});
+                        setCustomLabel('');
+                      }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] bg-white"
+                  >
+                    <option value="">Pilih Label Alamat</option>
+                    <option value="Rumah">Rumah</option>
+                    <option value="Kantor">Kantor</option>
+                    <option value="Kos">Kos</option>
+                    <option value="Apartemen">Apartemen</option>
+                    <option value="Toko">Toko</option>
+                    <option value="Gudang">Gudang</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                  {newAddress.label === 'Lainnya' && (
+                    <input
+                      type="text"
+                      value={customLabel}
+                      onChange={(e) => setCustomLabel(e.target.value)}
+                      placeholder="Masukkan label lainnya"
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -299,6 +370,19 @@ export default function AddressSelector({
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
                   />
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    checked={newAddress.isDefault || false}
+                    onChange={(e) => setNewAddress({...newAddress, isDefault: e.target.checked})}
+                    className="w-4 h-4 text-[#E00000] border-gray-300 rounded focus:ring-[#E00000]"
+                  />
+                  <label htmlFor="isDefault" className="text-sm font-medium text-gray-700">
+                    Jadikan sebagai alamat default
+                  </label>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
@@ -313,8 +397,10 @@ export default function AddressSelector({
                       province: '',
                       postalCode: '',
                       zone: null,
-                      note: ''
+                      note: '',
+                      isDefault: false
                     });
+                    setCustomLabel('');
                     setCitySearch('');
                   }}
                   className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
@@ -323,7 +409,7 @@ export default function AddressSelector({
                 </button>
                 <button
                   onClick={handleAddAddress}
-                  disabled={!newAddress.label || !newAddress.street || !newAddress.city || !newAddress.zone}
+                  disabled={!(newAddress.label === 'Lainnya' ? customLabel : newAddress.label) || !newAddress.street || !newAddress.city || !newAddress.zone}
                   className="flex-1 px-4 py-3 bg-[#E00000] text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Simpan Alamat

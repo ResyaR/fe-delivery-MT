@@ -11,29 +11,26 @@ export default function PromoBanner() {
     {
       id: 1,
       title: "Hemat 30% untuk Pesanan Pertama Anda!",
-      subtitle: "Gunakan kode: MTWELCOME30 - Min. pembelian Rp 50.000",
-      bgColor: "bg-gradient-to-r from-[#E00000] via-[#FF6B6B] to-[#FF8E53]",
+      subtitle: "Min. pembelian Rp 50.000",
       buttonText: "Pesan Sekarang",
       link: "/food",
-      image: "/food-promo-banner-1.jpg"
+      image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=400&fit=crop"
     },
     {
       id: 2,
       title: "Gratis Ongkir Untuk Pengiriman Lokal",
       subtitle: "Kirim paket dalam kota gratis untuk min. Rp 100.000",
-      bgColor: "bg-gradient-to-r from-[#1e3a8a] via-[#3b82f6] to-[#60a5fa]",
       buttonText: "Cek Ongkir",
       link: "/cek-ongkir",
-      image: "/food-promo-banner-2.jpg"
+      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=400&fit=crop"
     },
     {
       id: 3,
       title: "Promo Spesial Akhir Bulan",
       subtitle: "Diskon hingga 25% untuk menu pilihan dari merchant favorit",
-      bgColor: "bg-gradient-to-r from-[#be123c] via-[#E00000] to-[#dc2626]",
       buttonText: "Lihat Menu",
       link: "/food/all",
-      image: "/food-promo-banner-3.jpg"
+      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=400&fit=crop"
     }
   ];
 
@@ -65,35 +62,35 @@ export default function PromoBanner() {
             {promos.map((promo, index) => (
               <div
                 key={promo.id}
-                className={`min-w-full ${promo.bgColor} relative`}
-                style={{ minHeight: '300px' }}
+                className="min-w-full relative"
+                style={{ minHeight: '400px' }}
               >
-                <div className="container mx-auto px-6 sm:px-8 lg:px-12 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8">
-                  {/* Content */}
-                  <div className="flex-1 text-white text-center md:text-left z-10">
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${promo.image})` }}
+                >
+                  {/* Overlay untuk readability */}
+                  <div className="absolute inset-0 bg-black/50"></div>
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10 container mx-auto px-6 sm:px-8 lg:px-12 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 h-full min-h-[400px]">
+                  <div className="flex-1 text-white text-center md:text-left">
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
                       {promo.title}
                     </h2>
-                    <p className="text-lg sm:text-xl text-white/90 mb-6">
+                    <p className="text-lg sm:text-xl text-white/95 mb-6 drop-shadow-md">
                       {promo.subtitle}
                     </p>
                     <button
                       onClick={() => handlePromoClick(promo.link)}
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-[#E00000] text-white font-bold rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg"
                       aria-label={`${promo.buttonText} - ${promo.title}`}
                     >
                       <span>{promo.buttonText}</span>
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </button>
-                  </div>
-
-                  {/* Optional Image */}
-                  <div className="hidden md:block flex-shrink-0">
-                    <div className="w-64 h-64 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <span className="material-symbols-outlined text-white text-8xl">
-                        {promo.id === 1 ? 'restaurant' : promo.id === 2 ? 'local_shipping' : 'payments'}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>

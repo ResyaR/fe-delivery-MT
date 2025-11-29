@@ -2,15 +2,39 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/authContext';
 import RestaurantAPI from '@/lib/restaurantApi';
+import { addressAPI } from '@/lib/addressApi';
 
 export default function SearchBar({ onSearch, className = "" }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [userCity, setUserCity] = useState(null);
   const searchRef = useRef(null);
+
+  // Detect user location from default address
+  useEffect(() => {
+    const detectUserLocation = async () => {
+      if (!user) return;
+
+      try {
+        const addresses = await addressAPI.getAll();
+        const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
+        
+        if (defaultAddress && defaultAddress.city) {
+          setUserCity(defaultAddress.city);
+        }
+      } catch (error) {
+        console.error('Error detecting location:', error);
+      }
+    };
+
+    detectUserLocation();
+  }, [user]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -42,7 +66,8 @@ export default function SearchBar({ onSearch, className = "" }) {
   const handleSearch = async (query) => {
     try {
       setIsSearching(true);
-      const data = await RestaurantAPI.getAllRestaurants();
+      // Get restaurants filtered by city first, then filter by search query
+      const data = await RestaurantAPI.getAllRestaurants(userCity || undefined);
       
       // Filter restaurants by name or category
       const filtered = data.filter(restaurant => 

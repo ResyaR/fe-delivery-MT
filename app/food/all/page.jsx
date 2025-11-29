@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import RestaurantAPI from "@/lib/restaurantApi";
+import { addressAPI } from "@/lib/addressApi";
 import MTTransFoodHeader from "../../../components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "../../../components/food/MTTransFoodFooter";
 
@@ -17,12 +18,75 @@ function AllFoodContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userCity, setUserCity] = useState(null);
+  const hasDetectedLocationRef = useRef(false);
+  const isDetectingRef = useRef(false);
 
   const categories = ["Semua", "Mie Ayam", "Minuman", "Bakso", "Korea", "Es Krim"];
 
+  // Detect user location and load restaurants in one effect
   useEffect(() => {
-    loadRestaurants();
-  }, []);
+    // Prevent multiple calls
+    if (hasDetectedLocationRef.current || isDetectingRef.current) return;
+    
+    const detectAndLoad = async () => {
+      isDetectingRef.current = true;
+      let city = null;
+
+      if (user) {
+        try {
+          // Get default address from saved addresses
+          const addresses = await addressAPI.getAll();
+          const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
+          
+          if (defaultAddress && defaultAddress.city) {
+            city = defaultAddress.city;
+          } else {
+            // Try geolocation as fallback
+            if (navigator.geolocation) {
+              try {
+                const position = await new Promise((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject);
+                });
+                
+                // Reverse geocoding to get city name
+                const response = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=id`
+                );
+                const data = await response.json();
+                if (data.city || data.locality) {
+                  city = data.city || data.locality;
+                }
+              } catch (error) {
+                console.error('Error getting city from geolocation:', error);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error detecting location:', error);
+        }
+      }
+
+      // Set city and load restaurants
+      setUserCity(city);
+      hasDetectedLocationRef.current = true;
+      
+      // Load restaurants
+      try {
+        setIsLoading(true);
+        const data = await RestaurantAPI.getAllRestaurants(city || undefined);
+        setRestaurants(data);
+        setFilteredRestaurants(data);
+      } catch (error) {
+        console.error('Error loading restaurants:', error);
+      } finally {
+        setIsLoading(false);
+        isDetectingRef.current = false;
+      }
+    };
+
+    detectAndLoad();
+  }, [user]);
 
   useEffect(() => {
     // Get category and search from URL parameters
@@ -44,11 +108,13 @@ function AllFoodContent() {
     }
   }, [searchParams, restaurants]);
 
-  const loadRestaurants = async () => {
+  const loadRestaurants = async (city = null) => {
     try {
       setIsLoading(true);
-      const data = await RestaurantAPI.getAllRestaurants();
+      // Filter restaurants by user's city if available
+      const data = await RestaurantAPI.getAllRestaurants(city || userCity || undefined);
       setRestaurants(data);
+      setFilteredRestaurants(data);
     } catch (error) {
       console.error('Error loading restaurants:', error);
     } finally {
@@ -115,11 +181,31 @@ function AllFoodContent() {
                 "Semua Restaurant"
               )}
             </h1>
+            {userCity && (
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-md">
+                  <span className="material-symbols-outlined text-[#E00000]">location_on</span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    Menampilkan restaurant di <span className="text-[#E00000]">{userCity}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      setUserCity(null);
+                      loadRestaurants(null);
+                    }}
+                    className="ml-2 text-gray-500 hover:text-[#E00000] transition-colors"
+                    title="Tampilkan semua restaurant"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+              </div>
+            )}
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               {searchQuery ? (
                 `Menampilkan ${filteredRestaurants.length} restaurant`
               ) : (
-                "Temukan berbagai pilihan restaurant dengan menu lezat"
+                userCity ? `Restaurant terdekat di ${userCity}` : "Temukan berbagai pilihan restaurant dengan menu lezat"
               )}
             </p>
           </div>

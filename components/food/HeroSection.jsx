@@ -18,10 +18,10 @@ export default function HeroSection() {
     <div className="flex flex-col lg:flex-row items-center lg:items-start px-4 sm:px-6 lg:px-8 xl:px-16 gap-8 lg:gap-12">
       <div className="flex flex-col items-start mt-8 lg:mt-[29px] text-center lg:text-left">
         <span className="text-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold max-w-[415px] mb-4">
-          {"Apa Kata Mereka Tentang Layanan Food Delivery Kami?"}
+          {"Makanan Favoritmu, Dikirim dengan Cepat dan Hangat"}
         </span>
         <span className="text-[#555555] text-lg sm:text-xl md:text-2xl lg:text-[28px] font-bold max-w-[474px] mb-8 lg:mb-[41px]">
-          {"Cepat, hangat, dan aman sampai ke pelanggan."}
+          {"Pesan makanan dari restaurant terbaik di kotamu. Cepat, hangat, dan aman sampai ke rumah."}
         </span>
         <button
           className="flex flex-col items-center lg:items-start bg-[#FF9B44] text-center lg:text-left py-4 lg:py-[18px] px-6 lg:px-[35px] ml-0 lg:ml-[65px] rounded-[10px] border-0 w-full sm:w-auto transition-all duration-300 hover:bg-[#FF8B33] hover:scale-105 active:scale-95"
