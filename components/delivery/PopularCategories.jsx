@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/authContext'
+import { motion } from 'framer-motion'
 import Toast from '../common/Toast'
 
 const PopularCategories = () => {
@@ -73,11 +74,16 @@ const PopularCategories = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full max-w-7xl">
         {categories.map((category, index) => (
-          <button
+          <motion.button
             key={index}
             onClick={() => handleCategoryClick(category.name)}
-            className="flex flex-col items-center bg-white text-center p-6 md:p-8 rounded-3xl border-0 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-red-300"
+            className="flex flex-col items-center bg-white text-center p-6 md:p-8 rounded-3xl border-0 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-300"
             aria-label={`${category.name} service`}
+            initial={{ opacity: 0, y: 60, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: index * 0.15, ease: "easeOut" }}
+            whileHover={{ y: -12, scale: 1.05 }}
           >
             {/* Icon */}
             <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-4 md:mb-6">
@@ -112,10 +118,10 @@ const PopularCategories = () => {
             {/* Subtitle if exists */}
             {category.subtitle && (
               <span className="text-[#555555] text-sm md:text-base">
-                {category.subtitle}
-              </span>
+              {category.subtitle}
+            </span>
             )}
-          </button>
+          </motion.button>
         ))}
       </div>
 

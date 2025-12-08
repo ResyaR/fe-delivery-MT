@@ -314,7 +314,8 @@ export default function ProfilePage() {
                     value={formData.name}
                     onChange={handleInputChange}
                         placeholder="Masukkan nama lengkap Anda"
-                        className="block w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]/20 transition-all"
+                        className="block w-full min-h-[44px] pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]/20 transition-all"
+                        aria-required="false"
                   />
                 </div>
               </div>
@@ -334,7 +335,8 @@ export default function ProfilePage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                         placeholder="081234567890"
-                        className="block w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]/20 transition-all"
+                        className="block w-full min-h-[44px] pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]/20 transition-all"
+                        aria-required="false"
                   />
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
@@ -347,9 +349,10 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                      className={`w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-[#E00000] to-[#B70000] hover:from-[#B70000] hover:to-[#E00000] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 ${
+                      className={`w-full min-h-[44px] py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-[#E00000] to-[#B70000] hover:from-[#B70000] hover:to-[#E00000] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
+                    aria-label="Simpan perubahan profil"
                     >
                       {isLoading ? (
                         <>
@@ -411,7 +414,8 @@ export default function ProfilePage() {
             {!showAddressForm && (
               <button
                 onClick={() => setShowAddressForm(true)}
-                className="px-4 py-2 bg-[#E00000] text-white rounded-lg hover:bg-[#B70000] transition-colors flex items-center gap-2 font-semibold"
+                className="min-h-[44px] px-4 py-2 bg-[#E00000] text-white rounded-lg hover:bg-[#B70000] transition-colors flex items-center gap-2 font-semibold focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2"
+                aria-label="Tambah alamat baru"
               >
                 <span className="material-symbols-outlined text-lg">add</span>
                 Tambah Alamat
@@ -433,7 +437,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {savedAddresses.map((address) => (
                   <div key={address.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-3">
@@ -463,14 +467,16 @@ export default function ProfilePage() {
                     <div className="flex gap-2 mt-4">
                       <button
                         onClick={() => handleEditAddress(address)}
-                        className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        className="flex-1 min-h-[44px] px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label={`Edit alamat ${address.label}`}
                       >
                         <span className="material-symbols-outlined text-lg">edit</span>
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteAddress(address.id)}
-                        className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        className="flex-1 min-h-[44px] px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        aria-label={`Hapus alamat ${address.label}`}
                       >
                         <span className="material-symbols-outlined text-lg">delete</span>
                         Hapus

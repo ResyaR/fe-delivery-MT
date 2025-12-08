@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { OngkirAPI } from '@/lib/ongkirApi';
+import { useToast } from '@/components/common/ToastProvider';
 
 export default function AddressSelector({ 
   isOpen, 
@@ -10,6 +11,7 @@ export default function AddressSelector({
   savedAddresses = [],
   currentAddress 
 }) {
+  const { showError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: '',
@@ -31,6 +33,8 @@ export default function AddressSelector({
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
   const cityRef = useRef(null);
+  const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   // Load cities when searching
   useEffect(() => {
@@ -85,7 +89,7 @@ export default function AddressSelector({
 
   const handleAddAddress = () => {
     if (!newAddress.zone) {
-      alert('Pilih kota terlebih dahulu untuk menentukan zona pengiriman');
+      showError('Pilih kota terlebih dahulu untuk menentukan zona pengiriman');
       return;
     }
     
@@ -93,12 +97,12 @@ export default function AddressSelector({
     const finalLabel = newAddress.label === 'Lainnya' ? customLabel : newAddress.label;
     
     if (!finalLabel) {
-      alert('Pilih atau masukkan label alamat');
+      showError('Pilih atau masukkan label alamat');
       return;
     }
     
     if (!newAddress.recipientName.trim()) {
-      alert('Masukkan nama penerima');
+      showError('Masukkan nama penerima');
       return;
     }
     
@@ -124,34 +128,105 @@ export default function AddressSelector({
     setCitySearch('');
   };
 
+  // Focus trap and keyboard navigation
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+
+    const modal = modalRef.current;
+    previousFocusRef.current = document.activeElement;
+
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (firstElement) {
+      firstElement.focus();
+    }
+
+    const handleTabKey = (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+        if (previousFocusRef.current) {
+          previousFocusRef.current.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTabKey);
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      modal.removeEventListener('keydown', handleTabKey);
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+          if (previousFocusRef.current) {
+            previousFocusRef.current.focus();
+          }
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="address-selector-title"
+    >
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+      <div 
+        ref={modalRef}
+        className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900">
+            <h3 id="address-selector-title" className="text-lg sm:text-xl font-bold text-gray-900">
               {showAddForm ? 'Tambah Alamat Baru' : 'Pilih Alamat Pengiriman'}
             </h3>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Close"
+              className="min-w-[44px] min-h-[44px] p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+              aria-label="Tutup modal pilih alamat"
             >
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {!showAddForm ? (
             <>
               {/* Saved Addresses */}
@@ -212,7 +287,8 @@ export default function AddressSelector({
               {/* Add New Address Button */}
               <button
                 onClick={() => setShowAddForm(true)}
-                className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#E00000] hover:text-[#E00000] transition-colors flex items-center justify-center gap-2"
+                className="w-full min-h-[44px] p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#E00000] hover:text-[#E00000] transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                aria-label="Tambah alamat baru"
               >
                 <span className="material-symbols-outlined">add</span>
                 <span className="font-semibold">Tambah Alamat Baru</span>
@@ -231,7 +307,8 @@ export default function AddressSelector({
                     value={newAddress.recipientName}
                     onChange={(e) => setNewAddress({...newAddress, recipientName: e.target.value})}
                     placeholder="Masukkan nama penerima"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                    className="w-full min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                    aria-required="true"
                   />
                 </div>
 
@@ -250,7 +327,8 @@ export default function AddressSelector({
                         setCustomLabel('');
                       }
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] bg-white"
+                    className="w-full min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] bg-white"
+                    aria-required="true"
                   >
                     <option value="">Pilih Label Alamat</option>
                     <option value="Rumah">Rumah</option>
@@ -391,6 +469,7 @@ export default function AddressSelector({
                     setShowAddForm(false);
                     setNewAddress({
                       label: '',
+                      recipientName: '',
                       street: '',
                       city: '',
                       cityId: null,
@@ -403,14 +482,16 @@ export default function AddressSelector({
                     setCustomLabel('');
                     setCitySearch('');
                   }}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 min-h-[44px] px-4 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  aria-label="Batal tambah alamat"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleAddAddress}
                   disabled={!(newAddress.label === 'Lainnya' ? customLabel : newAddress.label) || !newAddress.street || !newAddress.city || !newAddress.zone}
-                  className="flex-1 px-4 py-3 bg-[#E00000] text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 min-h-[44px] px-4 py-3 bg-[#E00000] text-white font-semibold rounded-lg hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Simpan alamat baru"
                 >
                   Simpan Alamat
                 </button>

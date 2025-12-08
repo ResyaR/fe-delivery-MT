@@ -9,21 +9,21 @@ export default function StatsSection() {
   const stats = [
     {
       icon: "shopping_bag",
-      value: 15000,
+      value: 100,
       suffix: "+",
       label: "Total Orders",
       color: "text-blue-600"
     },
     {
       icon: "restaurant",
-      value: 150,
+      value: 100,
       suffix: "+",
       label: "Restaurant Partners",
       color: "text-orange-600"
     },
     {
       icon: "people",
-      value: 50000,
+      value: 100,
       suffix: "+",
       label: "Happy Customers",
       color: "text-purple-600"
@@ -99,10 +99,10 @@ export default function StatsSection() {
             Our Achievement
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
-            Dipercaya Ribuan Pengguna
+            Dipercaya Ratusan Pengguna
           </h2>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Bergabunglah dengan ribuan pelanggan yang sudah merasakan layanan terbaik kami
+            Bergabunglah dengan ratusan pelanggan yang sudah merasakan layanan terbaik kami
           </p>
         </div>
 

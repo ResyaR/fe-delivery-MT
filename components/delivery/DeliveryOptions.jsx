@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
+import { motion } from 'framer-motion';
 
 const DeliveryOptions = () => {
   const router = useRouter();
@@ -60,10 +61,15 @@ const DeliveryOptions = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full max-w-7xl">
         {options.map((option, index) => (
-          <div 
+          <motion.div 
             key={index} 
-            className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative hover:shadow-xl transition-shadow cursor-pointer focus:outline-none focus:ring-4 focus:ring-red-300" 
+            className="flex flex-col bg-white p-6 md:p-8 rounded-3xl shadow-lg relative cursor-pointer focus:outline-none focus:ring-4 focus:ring-red-300" 
             onClick={() => handleOptionClick(option.name)}
+            initial={{ opacity: 0, y: 60, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: index * 0.2, ease: "easeOut" }}
+            whileHover={{ y: -12, scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -134,7 +140,7 @@ const DeliveryOptions = () => {
                 <span className="text-[#454545] text-lg md:text-xl font-bold">{option.rating}</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

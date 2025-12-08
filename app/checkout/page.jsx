@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useCart } from "@/lib/cartContext";
+import { useToast } from "@/components/common/ToastProvider";
 import OrderAPI from "@/lib/orderApi";
 import MTTransFoodHeader from "@/components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "@/components/food/MTTransFoodFooter";
@@ -12,6 +13,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { cart, getTotalPrice, clearCart, getRestaurantId } = useCart();
+  const { showError } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
@@ -48,7 +50,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     
     if (!deliveryData || !deliveryData.address) {
-      alert('Mohon pilih alamat pengantaran terlebih dahulu');
+      showError('Mohon pilih alamat pengantaran terlebih dahulu');
       router.push('/cart');
       return;
     }
@@ -57,7 +59,7 @@ export default function CheckoutPage() {
       setIsSubmitting(true);
       
       if (!deliveryData || !deliveryData.address || !deliveryData.address.zone) {
-        alert('Data pengiriman tidak lengkap. Silakan kembali ke halaman cart.');
+        showError('Data pengiriman tidak lengkap. Silakan kembali ke halaman cart.');
         router.push('/cart');
         return;
       }
@@ -103,7 +105,7 @@ export default function CheckoutPage() {
       router.push(`/orders?success=true&orderId=${result.data.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
-      alert(error.message || 'Gagal membuat order. Silakan coba lagi.');
+      showError(error.message || 'Gagal membuat order. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -135,11 +137,12 @@ export default function CheckoutPage() {
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="min-w-[44px] min-h-[44px] p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+              aria-label="Kembali"
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Checkout</h1>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -230,7 +233,7 @@ export default function CheckoutPage() {
 
               {/* Order Summary - Sticky */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-24">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 sticky top-20 lg:top-24">
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Ringkasan Pesanan</h2>
                   
                   <div className="space-y-3 mb-6">
@@ -257,9 +260,10 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full bg-[#E00000] text-white py-3 rounded-lg font-bold transition-colors ${
+                    className={`w-full min-h-[44px] bg-[#E00000] text-white py-3 rounded-lg font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 ${
                       isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'
                     }`}
+                    aria-label={isSubmitting ? 'Memproses pesanan...' : 'Buat pesanan'}
                   >
                     {isSubmitting ? 'Memproses...' : 'Buat Pesanan'}
                   </button>

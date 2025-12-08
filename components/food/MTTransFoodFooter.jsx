@@ -2,28 +2,28 @@
 
 export default function MTTransFoodFooter() {
   return (
-    <footer className="bg-gray-100 dark:bg-card-dark py-12">
-      <div className="container mx-auto px-6 text-center text-subtle-light dark:text-subtle-dark">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <h4 className="font-bold text-lg mb-4 text-foreground-light dark:text-foreground-dark">Quick Links</h4>
+    <footer className="bg-gray-100 dark:bg-card-dark py-8 sm:py-12 w-full overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl text-center text-subtle-light dark:text-subtle-dark">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+          <div className="text-left sm:text-center md:text-left">
+            <h4 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 text-foreground-light dark:text-foreground-dark">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a className="hover:text-primary" href="/">Home</a></li>
-              <li><a className="hover:text-primary" href="#">Offers</a></li>
-              <li><a className="hover:text-primary" href="#">Menu</a></li>
-              <li><a className="hover:text-primary" href="#">Reservation</a></li>
+              <li><a className="hover:text-primary transition-colors break-words" href="/">Home</a></li>
+              <li><a className="hover:text-primary transition-colors break-words" href="#">Offers</a></li>
+              <li><a className="hover:text-primary transition-colors break-words" href="#">Menu</a></li>
+              <li><a className="hover:text-primary transition-colors break-words" href="#">Reservation</a></li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-bold text-lg mb-4 text-foreground-light dark:text-foreground-dark">Contact Info</h4>
+          <div className="text-left sm:text-center md:text-left">
+            <h4 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 text-foreground-light dark:text-foreground-dark">Contact Info</h4>
             <ul className="space-y-2">
-              <li><a className="hover:text-primary" href="mailto:info@mttrans.com">info@mttrans.com</a></li>
-              <li><a className="hover:text-primary" href="tel:+62123456789">+62 123 456 789</a></li>
+              <li><a className="hover:text-primary transition-colors break-all" href="mailto:info@mttrans.com">info@mttrans.com</a></li>
+              <li><a className="hover:text-primary transition-colors break-words" href="tel:+62123456789">+62 123 456 789</a></li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-bold text-lg mb-4 text-foreground-light dark:text-foreground-dark">Social Media</h4>
-            <div className="flex justify-center gap-6">
+          <div className="text-left sm:text-center md:text-left sm:col-span-2 md:col-span-1">
+            <h4 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 text-foreground-light dark:text-foreground-dark">Social Media</h4>
+            <div className="flex justify-start sm:justify-center md:justify-start gap-4 sm:gap-6">
               <a className="hover:text-primary transition-colors" href="#">
                 <svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160ZM176,24H80A56.06,56.06,0,0,0,24,80v96a56.06,56.06,0,0,0,56,56h96a56.06,56.06,0,0,0,56-56V80A56.06,56.06,0,0,0,176,24Zm40,152a40,40,0,0,1-40,40H80a40,40,0,0,1-40-40V80A40,40,0,0,1,80,40h96a40,40,0,0,1,40,40ZM192,76a12,12,0,1,1-12-12A12,12,0,0,1,192,76Z"></path>
@@ -42,8 +42,8 @@ export default function MTTransFoodFooter() {
             </div>
           </div>
         </div>
-        <div className="border-t border-subtle-light/20 dark:border-subtle-dark/20 pt-8 mt-8">
-          <p>© 2024 MT Trans. All rights reserved.</p>
+        <div className="border-t border-subtle-light/20 dark:border-subtle-dark/20 pt-6 sm:pt-8 mt-6 sm:mt-8">
+          <p className="text-sm sm:text-base break-words">© 2025 MT Trans. All rights reserved.</p>
         </div>
       </div>
     </footer>

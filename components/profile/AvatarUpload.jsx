@@ -7,11 +7,20 @@ const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaH
 
 export default function AvatarUpload({ currentAvatar, onUpload }) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(currentAvatar || DEFAULT_AVATAR);
+  
+  // Check if avatar is valid (not undefined, null, or contains "undefined")
+  const getValidAvatar = (avatar) => {
+    if (!avatar || avatar === 'undefined' || avatar.includes('undefined')) {
+      return DEFAULT_AVATAR;
+    }
+    return avatar;
+  };
+  
+  const [previewUrl, setPreviewUrl] = useState(getValidAvatar(currentAvatar));
 
   // Update previewUrl when currentAvatar changes
   useEffect(() => {
-    setPreviewUrl(currentAvatar || DEFAULT_AVATAR);
+    setPreviewUrl(getValidAvatar(currentAvatar));
   }, [currentAvatar]);
 
   const handleFileChange = async (e) => {
@@ -37,7 +46,7 @@ export default function AvatarUpload({ currentAvatar, onUpload }) {
     } catch (error) {
       console.error('Error uploading avatar:', error);
       // Revert preview on error
-      setPreviewUrl(currentAvatar || DEFAULT_AVATAR);
+      setPreviewUrl(getValidAvatar(currentAvatar));
     } finally {
       setIsUploading(false);
     }

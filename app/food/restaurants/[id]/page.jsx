@@ -118,7 +118,8 @@ export default function RestaurantDetailPage() {
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <button
                   onClick={() => router.back()}
-                  className="mb-4 flex items-center gap-2 text-gray-600 hover:text-[#E00000] transition-colors"
+                  className="mb-4 min-h-[44px] flex items-center gap-2 text-gray-600 hover:text-[#E00000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2"
+                  aria-label="Kembali"
                 >
                   <span className="material-symbols-outlined">arrow_back</span>
                   Kembali
@@ -129,10 +130,11 @@ export default function RestaurantDetailPage() {
                     src={restaurant.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="256" height="192"%3E%3Crect width="256" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'}
                     alt={restaurant.name}
                     className="w-full md:w-64 h-48 object-cover rounded-2xl shadow-lg"
+                    loading="lazy"
                     onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="256" height="192"%3E%3Crect width="256" height="192" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="32"%3E%3F%3C/text%3E%3C/svg%3E'; }}
                   />
                   <div className="flex-1">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
                     <p className="text-lg text-gray-600 mb-4">{restaurant.description}</p>
                     
                     <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -166,16 +168,18 @@ export default function RestaurantDetailPage() {
             {/* Category Filter */}
             <section className="bg-white border-b border-gray-200 sticky top-20 z-30">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {categories.map((category) => (
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(category)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                      className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] ${
                         selectedCategory === category
                           ? 'bg-[#E00000] text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
+                      aria-label={`Filter kategori ${category === 'all' ? 'Semua' : category}`}
+                      aria-pressed={selectedCategory === category}
                     >
                       {category === 'all' ? 'Semua' : category}
                     </button>
@@ -185,12 +189,12 @@ export default function RestaurantDetailPage() {
             </section>
 
             {/* Menu Grid */}
-            <section className="py-12">
+            <section className="py-8 sm:py-12">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-8">Menu</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Menu</h2>
                 
                 {filteredMenus.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {filteredMenus.map((menu) => (
                       <div
                         key={menu.id}
@@ -221,7 +225,8 @@ export default function RestaurantDetailPage() {
                             <button
                               onClick={() => handleAddToCart(menu)}
                               disabled={isAddingToCart === menu.id}
-                              className="bg-[#E00000] text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="min-h-[44px] bg-[#E00000] text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              aria-label={`Tambah ${menu.name} ke keranjang`}
                             >
                               {isAddingToCart === menu.id ? (
                                 <>
@@ -262,7 +267,8 @@ export default function RestaurantDetailPage() {
       {totalCartItems > 0 && (
         <button
           onClick={() => router.push('/cart')}
-          className="fixed bottom-6 right-6 bg-[#E00000] text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all z-40 flex items-center gap-2"
+          className="fixed bottom-6 right-6 min-w-[56px] min-h-[56px] bg-[#E00000] text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all z-40 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2"
+          aria-label={`Buka keranjang dengan ${totalCartItems} item`}
         >
           <span className="material-symbols-outlined">shopping_cart</span>
           <span className="font-semibold">{totalCartItems}</span>

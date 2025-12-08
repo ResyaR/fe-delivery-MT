@@ -165,3 +165,13 @@ p {
 .btn-brand:hover {
   background-color: var(--brand-red-dark);
 }
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

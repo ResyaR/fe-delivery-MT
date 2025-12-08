@@ -51,10 +51,18 @@ export default function UserMenu() {
 
   if (!user) return null;
 
+  // Check if avatar is valid (not undefined, null, or contains "undefined")
+  const getAvatarSrc = () => {
+    if (!user.avatar || user.avatar === 'undefined' || user.avatar.includes('undefined')) {
+      return DEFAULT_AVATAR;
+    }
+    return user.avatar;
+  };
+
   return (
     <div className="flex items-center space-x-2 sm:space-x-4" ref={dropdownRef}>
       <img
-        src={user.avatar || DEFAULT_AVATAR}
+        src={getAvatarSrc()}
         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200"
         alt="Profile"
         onError={(e) => {
@@ -87,7 +95,7 @@ export default function UserMenu() {
               <div className="px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center space-x-3">
                   <img
-                    src={user.avatar || DEFAULT_AVATAR}
+                    src={getAvatarSrc()}
                     className="w-10 h-10 rounded-full object-cover"
                     alt="Profile"
                     onError={(e) => {

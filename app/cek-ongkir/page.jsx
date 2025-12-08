@@ -7,7 +7,7 @@ import MTTransFooter from '@/components/delivery/MTTransFooter';
 
 export default function CekOngkirPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-white text-black antialiased">
+    <div className="flex flex-col min-h-screen bg-white text-black antialiased w-full overflow-x-hidden">
       <style jsx global>{`
         :root {
           --brand-red: #FF0000;
@@ -29,8 +29,12 @@ export default function CekOngkirPage() {
       `}</style>
       
       <MTTransHeader />
-      <main className="pt-20">
-        <Suspense fallback={<div className="flex justify-center items-center h-64">Loading...</div>}>
+      <main className="pt-20 flex-1 pb-8 sm:pb-16">
+        <Suspense fallback={
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E00000]"></div>
+          </div>
+        }>
           <MTTransMultiTabForm />
         </Suspense>
       </main>

@@ -1,25 +1,26 @@
 export default function ServicesSection() {
   return (
     <div className="py-8 lg:py-16">
-      {/* Services Section */}
-      <div className="flex flex-col lg:flex-row items-start mb-16 lg:mb-[31px] justify-center gap-8 lg:gap-16">
-        <div className="flex flex-col shrink-0 items-start mt-8 lg:mt-[47px] mr-0 lg:mr-[68px] text-center lg:text-left">
-          <span className="text-[#FF6868] text-xl font-bold mb-8 lg:mb-16">Our Story & Services</span>
-          <span className="text-black text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 lg:mb-[17px] ml-0 lg:ml-[3px]">Kenapa Pilih Kami?</span>
-          <span className="text-[#555555] text-lg sm:text-xl lg:text-[26px] font-bold max-w-[645px]">
-            Berlandaskan komitmen, kami menghadirkan layanan pengantaran yang aman, cepat, dan terpercaya,
-            memastikan setiap kiriman sampai tepat waktu.
-          </span>
-        </div>
-        <div className="flex flex-col shrink-0 items-start gap-4 lg:gap-7">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Services Section */}
+        <div className="flex flex-col lg:flex-row items-start mb-16 lg:mb-[31px] justify-center gap-8 lg:gap-16">
+          <div className="flex flex-col shrink-0 items-start mt-8 lg:mt-[47px] mr-0 lg:mr-[68px] text-center lg:text-left w-full lg:w-auto">
+            <span className="text-[#FF6868] text-lg sm:text-xl font-bold mb-6 sm:mb-8 lg:mb-16">Our Story & Services</span>
+            <span className="text-black text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-4 lg:mb-[17px] ml-0 lg:ml-[3px]">Kenapa Pilih Kami?</span>
+            <span className="text-[#555555] text-base sm:text-lg lg:text-[26px] font-bold max-w-full lg:max-w-[645px]">
+              Berlandaskan komitmen, kami menghadirkan layanan pengantaran yang aman, cepat, dan terpercaya,
+              memastikan setiap kiriman sampai tepat waktu.
+            </span>
+          </div>
+          <div className="flex flex-col shrink-0 items-start gap-4 lg:gap-7 w-full lg:w-auto">
           {/* Top row */}
           <div className="flex flex-col sm:flex-row items-start gap-4 lg:gap-[22px]">
             <button
-              className="flex flex-col items-start bg-white text-left py-4 lg:py-5 rounded-[30px] border-0 w-full sm:w-auto transition-transform duration-300 hover:scale-105"
+              className="flex flex-col items-start bg-white text-left py-4 lg:py-5 rounded-[30px] border-0 w-full sm:w-auto transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
               style={{
                 boxShadow: "7px 12px 43px #00000024",
               }}
-              onClick={() => alert("Pressed!")}
+              aria-label="Layanan Aman"
             >
               <img
                 src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/pmhU3FeeUc/xcatdimx_expires_30_days.png"
@@ -85,7 +86,6 @@ export default function ServicesSection() {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

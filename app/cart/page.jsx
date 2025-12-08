@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useCart } from "@/lib/cartContext";
+import { useToast } from "@/components/common/ToastProvider";
 import MTTransFoodHeader from "@/components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "@/components/food/MTTransFoodFooter";
 import ConfirmDialog from "@/components/cart/ConfirmDialog";
@@ -15,6 +16,7 @@ export default function CartPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { cart, updateQuantity, removeFromCart, clearCart, getTotalPrice } = useCart();
+  const { showError } = useToast();
 
   // State management
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -176,7 +178,7 @@ export default function CartPage() {
       await updateQuantity(menuId, newQty);
     } catch (error) {
       console.error('Error updating quantity:', error);
-      alert(error.message || 'Gagal mengupdate jumlah item');
+      showError(error.message || 'Gagal mengupdate jumlah item');
     } finally {
       setUpdatingItem(null);
     }
@@ -187,7 +189,7 @@ export default function CartPage() {
       await removeFromCart(menuId);
     } catch (error) {
       console.error('Error removing from cart:', error);
-      alert(error.message || 'Gagal menghapus item dari keranjang');
+      showError(error.message || 'Gagal menghapus item dari keranjang');
     }
   };
 
@@ -270,20 +272,20 @@ export default function CartPage() {
   const restaurantGroups = Object.values(itemsByRestaurant);
 
   return (
-    <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen">
+    <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen flex flex-col">
       <MTTransFoodHeader />
 
-      <main className="pt-20 pb-16">
+      <main className="pt-20 pb-8 sm:pb-16 flex-1">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Go back"
+              className="min-w-[44px] min-h-[44px] p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+              aria-label="Kembali"
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Keranjang Belanja</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Keranjang Belanja</h1>
           </div>
 
           {/* Checkout Steps */}
@@ -301,9 +303,9 @@ export default function CartPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
               {/* Cart Items */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="md:col-span-2 space-y-6">
                 {/* Address Section */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -411,8 +413,8 @@ export default function CartPage() {
                               <button
                                 onClick={() => handleUpdateQuantity(item.menuId, item.quantity - 1)}
                                 disabled={updatingItem === item.menuId}
-                                className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
-                                aria-label="Decrease quantity"
+                                className="min-w-[44px] min-h-[44px] w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                                aria-label="Kurangi jumlah"
                               >
                                 <span className="material-symbols-outlined text-lg">remove</span>
                               </button>
@@ -422,16 +424,16 @@ export default function CartPage() {
                               <button
                                 onClick={() => handleUpdateQuantity(item.menuId, item.quantity + 1)}
                                 disabled={updatingItem === item.menuId}
-                                className="w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50"
-                                aria-label="Increase quantity"
+                                className="min-w-[44px] min-h-[44px] w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                                aria-label="Tambah jumlah"
                               >
                                 <span className="material-symbols-outlined text-lg">add</span>
                               </button>
                             </div>
                             <button
                               onClick={() => handleRemoveFromCart(item.menuId)}
-                              className="text-red-600 hover:text-red-700 p-2"
-                              aria-label={`Remove ${item.menuName} from cart`}
+                              className="min-w-[44px] min-h-[44px] text-red-600 hover:text-red-700 p-2 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                              aria-label={`Hapus ${item.menuName} dari keranjang`}
                             >
                               <span className="material-symbols-outlined">delete</span>
                             </button>
@@ -493,8 +495,8 @@ export default function CartPage() {
               </div>
 
               {/* Order Summary */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-24 space-y-6">
+              <div className="md:col-span-1">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 sticky top-20 lg:top-24 space-y-6">
                   <h2 className="text-lg font-bold text-gray-900">Ringkasan Belanja</h2>
                   
                   {/* Promo Code */}
@@ -546,10 +548,6 @@ export default function CartPage() {
                       <span className="font-semibold">Rp {subtotal.toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between text-gray-700">
-                      <span>Biaya Aplikasi (10%)</span>
-                      <span className="font-semibold">Rp {appFee.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-700">
                       <span>Biaya Pengantaran</span>
                       <span className="font-semibold">Rp {deliveryFee.toLocaleString('id-ID')}</span>
                     </div>
@@ -560,7 +558,11 @@ export default function CartPage() {
                       </div>
                     )}
                     <div className="border-t border-gray-200 pt-3">
-                      <div className="flex justify-between text-lg font-bold text-gray-900">
+                      <div className="flex justify-between text-gray-700 mb-3">
+                        <span>Biaya Aplikasi (10%)</span>
+                        <span className="font-semibold">Rp {appFee.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
                         <span>Total</span>
                         <span className="text-[#E00000]">Rp {total.toLocaleString('id-ID')}</span>
                       </div>
@@ -583,7 +585,8 @@ export default function CartPage() {
                       router.push('/checkout');
                     }}
                     disabled={!selectedAddress}
-                    className="w-full bg-[#E00000] text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full min-h-[44px] bg-[#E00000] text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label={selectedAddress ? 'Lanjut ke pembayaran' : 'Pilih alamat terlebih dahulu'}
                   >
                     {selectedAddress ? 'Lanjut ke Pembayaran' : 'Pilih Alamat Dulu'}
                   </button>

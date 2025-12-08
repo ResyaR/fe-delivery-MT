@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
+import { useToast } from "@/components/common/ToastProvider";
 import OrderAPI from "@/lib/orderApi";
 import MTTransFoodHeader from "@/components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "@/components/food/MTTransFoodFooter";
@@ -11,6 +12,9 @@ function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
+  const { showError } = useToast();
+  const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
   
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +39,60 @@ function OrdersContent() {
     }
   }, [user, loading, router, searchParams]);
 
+  // Focus trap and keyboard navigation for modal
+  useEffect(() => {
+    if (!showDetailModal || !modalRef.current) return;
+
+    const modal = modalRef.current;
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus first element when modal opens
+    if (firstElement) {
+      firstElement.focus();
+    }
+
+    const handleTabKey = (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        setShowDetailModal(false);
+        if (previousFocusRef.current) {
+          previousFocusRef.current.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTabKey);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      modal.removeEventListener('keydown', handleTabKey);
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDetailModal]);
+
   const loadOrders = async () => {
     try {
       setIsLoading(true);
@@ -52,9 +110,10 @@ function OrdersContent() {
       const orderDetail = await OrderAPI.getOrderDetail(order.id);
       setSelectedOrder(orderDetail);
       setShowDetailModal(true);
+      previousFocusRef.current = document.activeElement;
     } catch (error) {
       console.error('Error loading order detail:', error);
-      alert('Gagal memuat detail order');
+      showError('Gagal memuat detail order. Silakan coba lagi.');
     }
   };
 
@@ -114,7 +173,7 @@ function OrdersContent() {
 
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Riwayat Pesanan</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Riwayat Pesanan</h1>
 
           {isLoading ? (
             <div className="text-center py-12">
@@ -182,7 +241,8 @@ function OrdersContent() {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={() => handleViewDetail(order)}
-                        className="flex-1 border border-[#E00000] text-[#E00000] py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 min-h-[44px] border border-[#E00000] text-[#E00000] py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2"
+                        aria-label={`Lihat detail pesanan ${order.orderNumber || order.id}`}
                       >
                         <span className="material-symbols-outlined text-lg">visibility</span>
                         Lihat Detail
@@ -190,7 +250,8 @@ function OrdersContent() {
                       {order.status === 'delivered' && (
                         <button
                           onClick={() => router.push(`/food/restaurants/${order.restaurantId}`)}
-                          className="flex-1 bg-[#E00000] text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 min-h-[44px] bg-[#E00000] text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2"
+                          aria-label="Pesan lagi dari restaurant ini"
                         >
                           <span className="material-symbols-outlined text-lg">refresh</span>
                           Pesan Lagi
@@ -209,23 +270,46 @@ function OrdersContent() {
 
       {/* Order Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDetailModal(false);
+              if (previousFocusRef.current) {
+                previousFocusRef.current.focus();
+              }
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="order-detail-title"
+        >
+          <div 
+            ref={modalRef}
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 id="order-detail-title" className="text-xl sm:text-2xl font-bold text-gray-900">
                   Detail Pesanan {selectedOrder.orderNumber || `#${selectedOrder.id}`}
                 </h2>
                 <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    if (previousFocusRef.current) {
+                      previousFocusRef.current.focus();
+                    }
+                  }}
+                  className="min-w-[44px] min-h-[44px] p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                  aria-label="Tutup modal detail pesanan"
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               {/* Status */}
               <div>
                 <p className="text-sm text-gray-600 mb-2">Status Pesanan</p>
@@ -313,22 +397,24 @@ function OrdersContent() {
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-700">
-                    <span>Biaya Aplikasi (10%)</span>
-                    <span className="font-medium">
-                      Rp {Math.round(parseInt(selectedOrder.subtotal) * 0.1).toLocaleString('id-ID')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-gray-700">
                     <span>Biaya Pengantaran</span>
                     <span className="font-medium">
                       Rp {parseInt(selectedOrder.deliveryFee).toLocaleString('id-ID')}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-200">
-                    <span>Total</span>
-                    <span className="text-[#E00000]">
-                      Rp {Math.round(selectedOrder.total).toLocaleString('id-ID')}
-                    </span>
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="flex justify-between text-gray-700 mb-3">
+                      <span>Biaya Aplikasi (10%)</span>
+                      <span className="font-medium">
+                        Rp {Math.round(parseInt(selectedOrder.subtotal) * 0.1).toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t border-gray-200">
+                      <span>Total</span>
+                      <span className="text-[#E00000]">
+                        Rp {Math.round(selectedOrder.total).toLocaleString('id-ID')}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
