@@ -2,24 +2,16 @@
 
 const Testimonials = () => {
   return (
-    <div className="relative flex flex-col items-center self-stretch px-4 md:px-8 lg:px-16 xl:px-32 mb-16 md:mb-24 overflow-visible">
+    <div className="relative flex flex-col items-center self-stretch px-3 sm:px-4 md:px-6 lg:px-8 mb-16 md:mb-24 overflow-x-hidden max-w-7xl mx-auto">
       {/* Extra space before testimonials */}
       <div className="h-32 md:h-48 lg:h-64"></div>
       
-      <div className="text-center mb-8 md:mb-12 relative z-10">
+      <div className="text-center mb-8 md:mb-12 relative z-10 w-full">
         <span className="text-red-500 text-sm md:text-base font-bold uppercase tracking-wider mb-2 block">
           Testimonials
         </span>
         <h2 
-          className="text-black text-2xl md:text-4xl lg:text-5xl font-bold max-w-4xl absolute"
-          style={{
-            width: '635px',
-            height: '158px',
-            top: '50px',
-            left: '100px',
-            transform: 'rotate(0deg)',
-            opacity: 1
-          }}
+          className="text-black text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold w-full px-2 sm:px-0"
         >
           What Our Customers Say About Us
         </h2>
@@ -27,11 +19,11 @@ const Testimonials = () => {
 
       <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 w-full max-w-6xl relative z-10">
         {/* Customer Image & Info */}
-        <div className="flex flex-col items-center lg:items-start">
-          <div className="relative mb-6">
+        <div className="flex flex-col items-center lg:items-start w-full lg:w-auto">
+          <div className="relative mb-6 w-full max-w-[492px]">
             {/* Green shape background */}
             <div 
-              className="w-[492px] h-[362px] bg-green-500"
+              className="w-full max-w-[492px] h-[280px] sm:h-[320px] md:h-[362px] bg-green-500 mx-auto"
               style={{
                 borderTopLeftRadius: '140px',
                 borderTopRightRadius: '140px',
@@ -45,11 +37,11 @@ const Testimonials = () => {
             <img
               src="/green-rounded-rectangle.png"
               alt="M. Zaky"
-              className="absolute w-[916px] h-[611px] object-cover"
+              className="hidden md:block absolute w-full max-w-[600px] h-auto object-cover"
               style={{
-                top: '-300px',
-                left: '-50px',
-                transform: 'rotate(0deg)',
+                top: '-200px',
+                left: '50%',
+                transform: 'translateX(-50%)',
                 opacity: 1
               }}
             />

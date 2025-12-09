@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +11,7 @@ export default function UserMenu() {
   const router = useRouter();
   const [isUserOpen, setIsUserOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   const handleLogout = async () => {
     try {
@@ -37,17 +39,28 @@ export default function UserMenu() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isUserOpen) return;
+    
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const profileButton = buttonRef.current;
+      const profileDropdown = document.querySelector('[data-profile-dropdown]');
+      
+      if (profileButton && !profileButton.contains(event.target) && 
+          profileDropdown && !profileDropdown.contains(event.target)) {
         setIsUserOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Use setTimeout to avoid immediate closure
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+    
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isUserOpen]);
 
   if (!user) return null;
 
@@ -60,7 +73,7 @@ export default function UserMenu() {
   };
 
   return (
-    <div className="flex items-center space-x-2 sm:space-x-4" ref={dropdownRef}>
+    <div className="flex items-center space-x-2 sm:space-x-4" ref={dropdownRef} style={{ overflow: 'visible', position: 'relative' }}>
       <img
         src={getAvatarSrc()}
         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200"
@@ -70,10 +83,15 @@ export default function UserMenu() {
           e.target.src = DEFAULT_AVATAR;
         }}
       />
-      <div className="relative">
+      <div className="relative" style={{ overflow: 'visible' }}>
         <div 
+          ref={buttonRef}
+          data-profile-button
           className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => setIsUserOpen(!isUserOpen)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsUserOpen(!isUserOpen);
+          }}
         >
           <span className="text-[#272727] text-sm sm:text-base font-medium mr-2 hidden sm:block max-w-[150px] truncate">
             {user.fullName || user.email}
@@ -88,8 +106,19 @@ export default function UserMenu() {
           </svg>
         </div>
         
-        {isUserOpen && (
-          <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+        {typeof window !== 'undefined' && isUserOpen && buttonRef.current && createPortal(
+          <div 
+            data-profile-dropdown
+            className="fixed w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-[60] overflow-hidden"
+            style={{ 
+              pointerEvents: 'auto',
+              position: 'fixed',
+              zIndex: 60,
+              top: buttonRef.current.getBoundingClientRect().bottom + 8,
+              right: window.innerWidth - buttonRef.current.getBoundingClientRect().right
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="py-2">
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-100">
@@ -151,7 +180,8 @@ export default function UserMenu() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>

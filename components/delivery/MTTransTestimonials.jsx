@@ -29,8 +29,8 @@ export default function MTTransTestimonials() {
   );
 
   return (
-    <section className="py-20 sm:py-24 bg-[#F5F5F5] fade-in">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 sm:py-24 bg-[#F5F5F5] fade-in overflow-x-hidden">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold tracking-tight text-[#1a1a1a] sm:text-5xl">Apa Kata Pelanggan Kami</h2>
           <p className="mt-4 text-lg text-gray-600">Kisah nyata dari para pelanggan setia kami.</p>

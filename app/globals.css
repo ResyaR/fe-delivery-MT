@@ -54,12 +54,19 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   @apply bg-background text-foreground;
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-family: 'Inter', 'Poppins', sans-serif;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Typography Hierarchy */

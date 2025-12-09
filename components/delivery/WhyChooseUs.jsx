@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 
 export default function ServicesSection() {
   return (
-    <div id="services" className="py-8 lg:py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div id="services" className="py-8 lg:py-16 overflow-x-hidden">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
         {/* Services Section */}
         <div className="flex flex-col lg:flex-row items-start mb-16 lg:mb-[31px] justify-center gap-8 lg:gap-16">
           <motion.div 

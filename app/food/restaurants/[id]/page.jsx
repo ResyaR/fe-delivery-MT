@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useCart } from "@/lib/cartContext";
+import { motion, AnimatePresence } from "framer-motion";
 import RestaurantAPI from "@/lib/restaurantApi";
 import MTTransFoodHeader from "@/components/food/MTTransFoodHeader";
 import MTTransFoodFooter from "@/components/food/MTTransFoodFooter";
@@ -26,6 +27,9 @@ export default function RestaurantDetailPage() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [isAddingToCart, setIsAddingToCart] = useState(null);
+  const [flyingItems, setFlyingItems] = useState([]);
+  const buttonRefs = useRef({});
+  const cartIconRef = useRef(null);
 
   useEffect(() => {
     loadRestaurantData();
@@ -47,13 +51,46 @@ export default function RestaurantDetailPage() {
     }
   };
 
-  const handleAddToCart = async (menu) => {
+  const handleAddToCart = async (menu, event) => {
     if (!user) {
       router.push('/signin');
       return;
     }
 
     setIsAddingToCart(menu.id);
+    
+    // Get button position
+    const button = buttonRefs.current[menu.id] || event?.currentTarget;
+    const buttonRect = button.getBoundingClientRect();
+    const startX = buttonRect.left + buttonRect.width / 2;
+    const startY = buttonRect.top + buttonRect.height / 2;
+
+    // Get cart icon position
+    const cartIcon = cartIconRef.current || document.querySelector('[data-cart-icon]');
+    let endX = window.innerWidth - 100; // Default position (right side)
+    let endY = 80; // Default position (top)
+
+    if (cartIcon) {
+      const cartRect = cartIcon.getBoundingClientRect();
+      endX = cartRect.left + cartRect.width / 2;
+      endY = cartRect.top + cartRect.height / 2;
+    }
+
+    // Create flying item
+    const flyingItemId = `${menu.id}-${Date.now()}`;
+    setFlyingItems(prev => [...prev, { 
+      id: flyingItemId, 
+      menu, 
+      startX, 
+      startY, 
+      endX, 
+      endY 
+    }]);
+
+    // Remove flying item after animation
+    setTimeout(() => {
+      setFlyingItems(prev => prev.filter(item => item.id !== flyingItemId));
+    }, 800);
     
     try {
       // Jalankan addToCart - semua item dari berbagai restaurant bisa ditambahkan ke cart yang sama
@@ -96,7 +133,49 @@ export default function RestaurantDetailPage() {
 
   return (
     <div className="relative w-full bg-white text-[#1a1a1a]">
-      <MTTransFoodHeader />
+      <MTTransFoodHeader cartIconRef={cartIconRef} />
+
+      {/* Flying Items Animation */}
+      <AnimatePresence>
+        {flyingItems.map((item) => {
+          const deltaX = item.endX - item.startX;
+          const deltaY = item.endY - item.startY;
+          
+          return (
+            <motion.div
+              key={item.id}
+              className="fixed z-[9999] pointer-events-none"
+              initial={{ 
+                x: item.startX - 20, 
+                y: item.startY - 20,
+                scale: 1,
+                opacity: 1,
+                rotate: 0
+              }}
+              animate={{ 
+                x: item.endX - 20, 
+                y: item.endY - 20,
+                scale: [1, 1.2, 0.4],
+                opacity: [1, 1, 0],
+                rotate: [0, 180, 360]
+              }}
+              exit={{ 
+                scale: 0,
+                opacity: 0
+              }}
+              transition={{ 
+                duration: 0.7,
+                ease: [0.25, 0.1, 0.25, 1], // Custom easing for smooth curve
+                times: [0, 0.5, 1]
+              }}
+            >
+              <div className="w-10 h-10 rounded-full bg-[#E00000] flex items-center justify-center shadow-lg border-2 border-white">
+                <span className="material-symbols-outlined text-white text-lg">shopping_cart</span>
+              </div>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
 
       {/* Notification Toast */}
       {showNotification && (
@@ -223,7 +302,8 @@ export default function RestaurantDetailPage() {
                               Rp {parseInt(menu.price).toLocaleString('id-ID')}
                             </p>
                             <button
-                              onClick={() => handleAddToCart(menu)}
+                              ref={(el) => buttonRefs.current[menu.id] = el}
+                              onClick={(e) => handleAddToCart(menu, e)}
                               disabled={isAddingToCart === menu.id}
                               className="min-h-[44px] bg-[#E00000] text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               aria-label={`Tambah ${menu.name} ke keranjang`}

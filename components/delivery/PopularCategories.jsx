@@ -62,7 +62,7 @@ const PopularCategories = () => {
   ]
 
   return (
-    <div className="flex flex-col items-center self-stretch px-4 md:px-8 lg:px-16 xl:px-32 py-16 md:py-20 lg:py-24">
+    <div className="flex flex-col items-center self-stretch px-3 sm:px-4 md:px-6 lg:px-8 py-16 md:py-20 lg:py-24 overflow-x-hidden max-w-7xl mx-auto w-full">
       <div className="flex flex-col items-center mb-12 md:mb-16">
         <span className="text-red-500 text-sm md:text-base font-bold uppercase tracking-wider mb-4">
           Customer Favorites

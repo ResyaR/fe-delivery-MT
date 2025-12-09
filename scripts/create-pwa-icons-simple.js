@@ -1,0 +1,106 @@
+// Simple script to create PWA icons using canvas (browser-based)
+// This will create an HTML file that you can open in browser to generate icons
+
+const fs = require('fs');
+const path = require('path');
+
+const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            background: #E00000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #B70000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generate PWA Icons from Logo</h1>
+        <p>Click the button below to generate PWA icons from logo.png</p>
+        <img id="logo" src="/logo.png" style="display: none;" onload="generateIcons()">
+        <div id="canvases"></div>
+        <button onclick="downloadAll()">Download All Icons</button>
+    </div>
+
+    <script>
+        const sizes = [192, 256, 384, 512, 180]; // 180 for apple-touch-icon
+        const canvases = {};
+
+        function generateIcons() {
+            const logo = document.getElementById('logo');
+            const container = document.getElementById('canvases');
+            
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                canvas.id = \`canvas-\${size}\`;
+                container.appendChild(canvas);
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Fill white background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, size, size);
+                
+                // Calculate logo size (80% of canvas with padding)
+                const logoSize = size * 0.8;
+                const x = (size - logoSize) / 2;
+                const y = (size - logoSize) / 2;
+                
+                // Draw logo
+                ctx.drawImage(logo, x, y, logoSize, logoSize);
+                
+                canvases[size] = canvas;
+            });
+        }
+
+        function downloadAll() {
+            sizes.forEach(size => {
+                const canvas = canvases[size];
+                if (canvas) {
+                    const filename = size === 180 ? 'apple-touch-icon.png' : \`icon-\${size}x\${size}.png\`;
+                    canvas.toBlob(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>`;
+
+const outputPath = path.join(__dirname, '../public/generate-icons.html');
+fs.writeFileSync(outputPath, htmlContent);
+console.log('✅ Created generate-icons.html');
+console.log('📝 Open http://localhost:3000/generate-icons.html in your browser to generate icons');
+

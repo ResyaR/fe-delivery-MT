@@ -406,7 +406,7 @@ function OrdersContent() {
                     <div className="flex justify-between text-gray-700 mb-3">
                       <span>Biaya Aplikasi (10%)</span>
                       <span className="font-medium">
-                        Rp {Math.round(parseInt(selectedOrder.subtotal) * 0.1).toLocaleString('id-ID')}
+                        Rp {Math.round((parseInt(selectedOrder.subtotal) + parseInt(selectedOrder.deliveryFee)) * 0.1).toLocaleString('id-ID')}
                       </span>
                     </div>
                     <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t border-gray-200">

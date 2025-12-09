@@ -251,8 +251,8 @@ export default function CartPage() {
   }
 
   const subtotal = getTotalPrice();
-  // Biaya aplikasi 10%
-  const appFee = subtotal * 0.1;
+  // Biaya aplikasi 10% dari subtotal + deliveryFee (makanan + driver)
+  const appFee = (subtotal + deliveryFee) * 0.1;
   const total = subtotal + deliveryFee + appFee - discount;
 
   // Kelompokkan item berdasarkan restaurant
@@ -272,11 +272,11 @@ export default function CartPage() {
   const restaurantGroups = Object.values(itemsByRestaurant);
 
   return (
-    <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen flex flex-col">
+    <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen flex flex-col overflow-x-hidden">
       <MTTransFoodHeader />
 
-      <main className="pt-20 pb-8 sm:pb-16 flex-1">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="pt-20 pb-8 sm:pb-16 flex-1 overflow-x-hidden">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl">
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => router.back()}
@@ -303,39 +303,39 @@ export default function CartPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {/* Cart Items */}
-              <div className="md:col-span-2 space-y-6">
+              <div className="md:col-span-2 space-y-4 sm:space-y-6">
                 {/* Address Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#E00000]">location_on</span>
-                      Alamat Pengiriman
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-4 gap-2">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#E00000] text-xl sm:text-2xl">location_on</span>
+                      <span className="break-words">Alamat Pengiriman</span>
                     </h2>
                   </div>
                   
                   {selectedAddress ? (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
                           {selectedAddress.recipientName && (
-                            <p className="text-lg font-bold text-gray-900 mb-2">{selectedAddress.recipientName}</p>
+                            <p className="text-base sm:text-lg font-bold text-gray-900 mb-2 break-words">{selectedAddress.recipientName}</p>
                           )}
-                          <p className="font-bold text-gray-900 mb-1">{selectedAddress.label}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="font-bold text-gray-900 mb-1 text-sm sm:text-base break-words">{selectedAddress.label}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 break-words">
                             {selectedAddress.street}, {selectedAddress.city}, {selectedAddress.province} {selectedAddress.postalCode}
                           </p>
                           {selectedAddress.note && (
-                            <p className="text-sm text-gray-500 mt-1">Note: {selectedAddress.note}</p>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-1 break-words">Note: {selectedAddress.note}</p>
                           )}
-                          <p className="text-sm text-[#E00000] mt-2">
-                            <span className="material-symbols-outlined text-sm align-middle">schedule</span> Est. {estimatedTime}
+                          <p className="text-xs sm:text-sm text-[#E00000] mt-2">
+                            <span className="material-symbols-outlined text-xs sm:text-sm align-middle">schedule</span> Est. {estimatedTime}
                           </p>
                         </div>
                         <button
                           onClick={() => setShowAddressSelector(true)}
-                          className="text-[#E00000] font-semibold text-sm hover:underline"
+                          className="text-[#E00000] font-semibold text-xs sm:text-sm hover:underline whitespace-nowrap flex-shrink-0"
                         >
                           Ubah
                         </button>
@@ -344,10 +344,10 @@ export default function CartPage() {
                   ) : (
                     <button
                       onClick={() => setShowAddressSelector(true)}
-                      className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#E00000] hover:text-[#E00000] transition-colors flex items-center justify-center gap-2"
+                      className="w-full p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#E00000] hover:text-[#E00000] transition-colors flex items-center justify-center gap-2"
                     >
-                      <span className="material-symbols-outlined">add</span>
-                      <span className="font-semibold">Pilih Alamat Pengiriman</span>
+                      <span className="material-symbols-outlined text-lg sm:text-xl">add</span>
+                      <span className="font-semibold text-sm sm:text-base">Pilih Alamat Pengiriman</span>
                     </button>
                   )}
                 </div>
@@ -373,9 +373,9 @@ export default function CartPage() {
                       />
 
                       {/* Cart Items untuk restaurant ini */}
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-900">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between gap-2">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900 flex-1 min-w-0 break-words">
                             {group.restaurantName}
                     </h2>
                     <button
@@ -385,7 +385,7 @@ export default function CartPage() {
                                 handleRemoveFromCart(menuId);
                               });
                             }}
-                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                      className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium whitespace-nowrap flex-shrink-0"
                             aria-label={`Clear all items from ${group.restaurantName}`}
                     >
                       Hapus Semua
@@ -394,55 +394,59 @@ export default function CartPage() {
 
                   <div className="divide-y divide-gray-200">
                           {group.items.map((item) => (
-                      <div key={item.menuId} className="p-4 flex gap-4">
-                        <img
-                                src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'}
-                          alt={item.menuName}
-                          className="w-24 h-24 object-cover rounded-lg"
-                          loading="lazy"
-                                onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'; }}
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 mb-1">{item.menuName}</h3>
-                          <p className="text-lg font-bold text-[#E00000] mb-3">
-                            Rp {item.price.toLocaleString('id-ID')}
-                          </p>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center border border-gray-300 rounded-lg">
+                      <div key={item.menuId} className="p-3 sm:p-4">
+                        <div className="flex gap-3 sm:gap-4">
+                          <img
+                                  src={item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'}
+                            alt={item.menuName}
+                            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg flex-shrink-0"
+                            loading="lazy"
+                                  onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="24"%3E%3F%3C/text%3E%3C/svg%3E'; }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h3 className="font-bold text-gray-900 text-sm sm:text-base flex-1 min-w-0 break-words">{item.menuName}</h3>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-base sm:text-lg font-bold text-gray-900 whitespace-nowrap">
+                                  Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm sm:text-base font-bold text-[#E00000] mb-2 sm:mb-3">
+                              Rp {item.price.toLocaleString('id-ID')}
+                            </p>
+                            
+                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                              <div className="flex items-center border border-gray-300 rounded-lg">
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.menuId, item.quantity - 1)}
+                                  disabled={updatingItem === item.menuId}
+                                  className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] w-10 h-10 sm:w-11 sm:h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                                  aria-label="Kurangi jumlah"
+                                >
+                                  <span className="material-symbols-outlined text-base sm:text-lg">remove</span>
+                                </button>
+                                <span className="px-3 sm:px-4 py-2 font-semibold min-w-[2.5rem] sm:min-w-[3rem] text-center text-sm sm:text-base">
+                                  {updatingItem === item.menuId ? '...' : item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.menuId, item.quantity + 1)}
+                                  disabled={updatingItem === item.menuId}
+                                  className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] w-10 h-10 sm:w-11 sm:h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
+                                  aria-label="Tambah jumlah"
+                                >
+                                  <span className="material-symbols-outlined text-base sm:text-lg">add</span>
+                                </button>
+                              </div>
                               <button
-                                onClick={() => handleUpdateQuantity(item.menuId, item.quantity - 1)}
-                                disabled={updatingItem === item.menuId}
-                                className="min-w-[44px] min-h-[44px] w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                                aria-label="Kurangi jumlah"
+                                onClick={() => handleRemoveFromCart(item.menuId)}
+                                className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] text-red-600 hover:text-red-700 p-2 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                                aria-label={`Hapus ${item.menuName} dari keranjang`}
                               >
-                                <span className="material-symbols-outlined text-lg">remove</span>
-                              </button>
-                              <span className="px-4 py-2 font-semibold min-w-[3rem] text-center">
-                                {updatingItem === item.menuId ? '...' : item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleUpdateQuantity(item.menuId, item.quantity + 1)}
-                                disabled={updatingItem === item.menuId}
-                                className="min-w-[44px] min-h-[44px] w-11 h-11 hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#E00000]"
-                                aria-label="Tambah jumlah"
-                              >
-                                <span className="material-symbols-outlined text-lg">add</span>
+                                <span className="material-symbols-outlined text-lg sm:text-xl">delete</span>
                               </button>
                             </div>
-                            <button
-                              onClick={() => handleRemoveFromCart(item.menuId)}
-                              className="min-w-[44px] min-h-[44px] text-red-600 hover:text-red-700 p-2 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                              aria-label={`Hapus ${item.menuName} dari keranjang`}
-                            >
-                              <span className="material-symbols-outlined">delete</span>
-                            </button>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">
-                            Rp {(item.price * item.quantity).toLocaleString('id-ID')}
-                          </p>
                         </div>
                       </div>
                     ))}
@@ -509,7 +513,7 @@ export default function CartPage() {
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        placeholder="MTWELCOME30"
+                        placeholder="Masukan kode"
                         disabled={discount > 0}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] disabled:bg-gray-100"
                       />

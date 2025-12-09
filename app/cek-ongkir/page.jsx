@@ -29,7 +29,7 @@ export default function CekOngkirPage() {
       `}</style>
       
       <MTTransHeader />
-      <main className="pt-20 flex-1 pb-8 sm:pb-16">
+      <main className="pt-20 flex-1 pb-8 sm:pb-16 overflow-x-hidden w-full">
         <Suspense fallback={
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E00000]"></div>

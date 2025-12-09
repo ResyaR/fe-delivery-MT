@@ -1390,7 +1390,7 @@ export default function MTTransMultiTabForm() {
               {loading ? 'Memproses...' : 'Buat Multi Drop Pengiriman'}
             </button>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs sm:text-sm text-blue-800 break-words">
               💡 <strong>Info:</strong> Harga dihitung berdasarkan jumlah titik tujuan dan estimasi jarak. Base: Rp 15.000 + Rp 5.000/titik + Rp 2.000/km
             </div>
           </div>
@@ -1477,9 +1477,9 @@ export default function MTTransMultiTabForm() {
               </div>
             </div>
 
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-3">Dimensi & Berat Paket</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-gray-100 p-3 sm:p-4 rounded-lg overflow-x-hidden">
+              <h4 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Dimensi & Berat Paket</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Panjang (cm)</label>
                   <input
@@ -1573,12 +1573,12 @@ export default function MTTransMultiTabForm() {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-blue-600">schedule</span>
-                Jadwalkan Pengiriman (Opsional)
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg overflow-x-hidden">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                <span className="material-symbols-outlined text-blue-600 flex-shrink-0">schedule</span>
+                <span className="break-words">Jadwalkan Pengiriman (Opsional)</span>
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Tanggal</label>
               <input
@@ -1624,7 +1624,7 @@ export default function MTTransMultiTabForm() {
               {loading ? 'Memproses...' : 'Buat Paket Besar Pengiriman'}
             </button>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs sm:text-sm text-blue-800 break-words">
               💡 <strong>Info:</strong> Harga: Rp 20.000 (base) + Rp 3.000/kg × berat terbesar (aktual/volume) + Rp 2.500/km + biaya tambahan
             </div>
           </div>
@@ -1636,17 +1636,17 @@ export default function MTTransMultiTabForm() {
   };
 
   return (
-    <div className="w-full flex items-center justify-center py-8 sm:py-12 lg:py-16 px-4 sm:px-6 bg-gray-50">
+    <div className="w-full flex items-center justify-center py-6 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-3 md:px-4 lg:px-6 bg-gray-50 overflow-x-hidden">
       <div className="w-full max-w-4xl">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="flex">
+          <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+            <nav className="flex min-w-max sm:min-w-0">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`flex-1 px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-inset ${
+                  className={`flex-shrink-0 px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-inset ${
                     activeTab === tab.id
                       ? 'bg-black text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -1655,9 +1655,10 @@ export default function MTTransMultiTabForm() {
                   aria-selected={activeTab === tab.id}
                   role="tab"
                 >
-                  <div className="flex items-center justify-center gap-1 sm:gap-2">
-                    <span className="material-symbols-outlined text-base sm:text-lg">{tab.icon}</span>
-                    <span className="whitespace-nowrap">{tab.label}</span>
+                  <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
+                    <span className="material-symbols-outlined text-sm sm:text-base md:text-lg flex-shrink-0">{tab.icon}</span>
+                    <span className="whitespace-nowrap hidden xs:inline">{tab.id === 'ekspedisi' ? 'Paket Besar' : tab.label}</span>
+                    <span className="whitespace-nowrap xs:hidden">{tab.id === 'ekspedisi' ? 'Paket' : tab.label.length > 8 ? tab.label.substring(0, 6) + '...' : tab.label}</span>
                   </div>
                 </button>
               ))}
@@ -1665,8 +1666,8 @@ export default function MTTransMultiTabForm() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-4 sm:p-6 lg:p-8">
-            <form onSubmit={handleSubmit}>
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
+            <form onSubmit={handleSubmit} className="w-full overflow-x-hidden">
               {renderTabContent()}
             </form>
           </div>

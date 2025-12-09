@@ -92,8 +92,8 @@ export default function StatsSection() {
   }
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="py-16 md:py-20 bg-gradient-to-b from-white to-gray-50 overflow-x-hidden">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12">
           <span className="text-red-500 text-sm md:text-base font-bold uppercase tracking-wider mb-2 block">
             Our Achievement

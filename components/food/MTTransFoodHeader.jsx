@@ -7,7 +7,7 @@ import { useCart } from '@/lib/cartContext';
 import UserMenu from '../main/UserMenu';
 import SearchBar from './SearchBar';
 
-export default function MTTransFoodHeader() {
+export default function MTTransFoodHeader({ cartIconRef }) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { cart } = useCart();
@@ -98,6 +98,8 @@ export default function MTTransFoodHeader() {
           </button>
           {/* Cart Icon */}
           <button 
+            ref={cartIconRef}
+            data-cart-icon
             onClick={handleCartClick}
             className="relative min-w-[44px] min-h-[44px] p-2 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000]"
             aria-label={`Keranjang belanja dengan ${totalItems} item`}

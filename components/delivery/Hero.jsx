@@ -6,7 +6,7 @@ const Hero = () => {
   }
 
   return (
-    <div className="flex flex-col items-center self-stretch px-4 md:px-8 lg:px-16 xl:px-32">
+    <div className="flex flex-col items-center self-stretch px-3 sm:px-4 md:px-6 lg:px-8 overflow-x-hidden max-w-7xl mx-auto w-full">
       <div className="relative w-full max-w-7xl">
         {/* Background with delivery illustration */}
         <div className="relative rounded-3xl overflow-hidden">

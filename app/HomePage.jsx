@@ -16,10 +16,10 @@ import MTTransFooter from "../components/delivery/MTTransFooter";
 
 export default function HomePage() {
   return (
-    <div className="relative w-full bg-white text-[#1a1a1a]">
+    <div className="relative w-full bg-white text-[#1a1a1a] overflow-x-hidden">
       <MTTransHeader />
       
-      <main id="main-content" className="pt-20">
+      <main id="main-content" className="pt-20 overflow-x-hidden">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}

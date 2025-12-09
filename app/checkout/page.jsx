@@ -125,7 +125,7 @@ export default function CheckoutPage() {
 
   const deliveryFee = deliveryData?.deliveryFee || 10000;
   const subtotal = getTotalPrice();
-  const appFee = subtotal * 0.1; // Biaya aplikasi 10%
+  const appFee = (subtotal + deliveryFee) * 0.1; // Biaya aplikasi 10% dari subtotal + deliveryFee (makanan + driver)
   const total = subtotal + deliveryFee + appFee;
 
   return (
