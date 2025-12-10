@@ -7,6 +7,7 @@ import DeliveryAPI from "../../lib/deliveryApi";
 import { useAuth } from "../../lib/authContext";
 import { OrderAPI } from "../../lib/orderApi";
 import { useToast } from "../common/ToastProvider";
+import Toast from "../common/Toast";
 
 export default function MTTransMultiTabForm() {
   const searchParams = useSearchParams();
@@ -106,12 +107,36 @@ export default function MTTransMultiTabForm() {
   const paketBesarPickupRef = useRef(null);
   const paketBesarDestRef = useRef(null);
 
+  // Kirim Sekarang state
+  const [kirimSekarangData, setKirimSekarangData] = useState({
+    pickupLocation: '',
+    pickupAddress: '',
+    dropoffLocation: '',
+    dropoffAddress: '',
+    serviceId: '',
+    itemName: '',
+    weight: '',
+    notes: ''
+  });
+  const [kirimSekarangPrice, setKirimSekarangPrice] = useState(null);
+  
+  // Kirim Sekarang autocomplete state
+  const [kirimSekarangPickupSearch, setKirimSekarangPickupSearch] = useState('');
+  const [kirimSekarangDestSearch, setKirimSekarangDestSearch] = useState('');
+  const [selectedKirimSekarangPickup, setSelectedKirimSekarangPickup] = useState(null);
+  const [selectedKirimSekarangDest, setSelectedKirimSekarangDest] = useState(null);
+  const [showKirimSekarangPickupDropdown, setShowKirimSekarangPickupDropdown] = useState(false);
+  const [showKirimSekarangDestDropdown, setShowKirimSekarangDestDropdown] = useState(false);
+  const kirimSekarangPickupRef = useRef(null);
+  const kirimSekarangDestRef = useRef(null);
+
   // Toast notification state
   const [toast, setToast] = useState(null);
 
   const tabs = [
     { id: 'lacak', label: 'Lacak', icon: 'search' },
     { id: 'cek-ongkir', label: 'Cek ongkir', icon: 'attach_money' },
+    { id: 'kirim-sekarang', label: 'Kirim Sekarang', icon: 'send' },
     { id: 'jadwal', label: 'Jadwal Pengiriman', icon: 'schedule' },
     { id: 'multi-drop', label: 'Multi Drop', icon: 'place' },
     { id: 'ekspedisi', label: 'Paket Besar/Ekspedisi Lokal', icon: 'local_shipping' }
@@ -188,6 +213,12 @@ export default function MTTransMultiTabForm() {
       }
       if (paketBesarDestRef.current && !paketBesarDestRef.current.contains(event.target)) {
         setShowPaketBesarDestDropdown(false);
+      }
+      if (kirimSekarangPickupRef.current && !kirimSekarangPickupRef.current.contains(event.target)) {
+        setShowKirimSekarangPickupDropdown(false);
+      }
+      if (kirimSekarangDestRef.current && !kirimSekarangDestRef.current.contains(event.target)) {
+        setShowKirimSekarangDestDropdown(false);
       }
     }
     
@@ -315,6 +346,43 @@ export default function MTTransMultiTabForm() {
   const filteredPaketBesarDestCities = cities.filter(city =>
     city.name.toLowerCase().includes(paketBesarDestSearch.toLowerCase()) ||
     city.province.toLowerCase().includes(paketBesarDestSearch.toLowerCase())
+  ).slice(0, 10);
+
+  // Kirim Sekarang autocomplete handlers
+  const handleKirimSekarangPickupSearch = (value) => {
+    setKirimSekarangPickupSearch(value);
+    setShowKirimSekarangPickupDropdown(true);
+    setSelectedKirimSekarangPickup(null);
+  };
+
+  const handleKirimSekarangDestSearch = (value) => {
+    setKirimSekarangDestSearch(value);
+    setShowKirimSekarangDestDropdown(true);
+    setSelectedKirimSekarangDest(null);
+  };
+
+  const selectKirimSekarangPickup = (city) => {
+    setSelectedKirimSekarangPickup(city);
+    setKirimSekarangPickupSearch(`${city.name}, ${city.province}`);
+    setShowKirimSekarangPickupDropdown(false);
+    setKirimSekarangData(prev => ({ ...prev, pickupLocation: `${city.name}, ${city.province}` }));
+  };
+
+  const selectKirimSekarangDest = (city) => {
+    setSelectedKirimSekarangDest(city);
+    setKirimSekarangDestSearch(`${city.name}, ${city.province}`);
+    setShowKirimSekarangDestDropdown(false);
+    setKirimSekarangData(prev => ({ ...prev, dropoffLocation: `${city.name}, ${city.province}` }));
+  };
+
+  const filteredKirimSekarangPickupCities = cities.filter(city =>
+    city.name.toLowerCase().includes(kirimSekarangPickupSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(kirimSekarangPickupSearch.toLowerCase())
+  ).slice(0, 10);
+
+  const filteredKirimSekarangDestCities = cities.filter(city =>
+    city.name.toLowerCase().includes(kirimSekarangDestSearch.toLowerCase()) ||
+    city.province.toLowerCase().includes(kirimSekarangDestSearch.toLowerCase())
   ).slice(0, 10);
 
   const handleInputChange = (e) => {
@@ -452,6 +520,119 @@ export default function MTTransMultiTabForm() {
     }
   };
 
+  // Kirim Sekarang Handlers
+  const handleKirimSekarangSubmit = async () => {
+    if (!user) {
+      setToast({ message: 'Silakan login terlebih dahulu', type: 'warning' });
+      setTimeout(() => router.push('/signin'), 1500);
+      return;
+    }
+
+    // Validation
+    if (!selectedKirimSekarangPickup || !selectedKirimSekarangDest) {
+      setToast({ message: 'Pilih kota penjemputan dan tujuan dari autocomplete', type: 'warning' });
+      return;
+    }
+    if (!kirimSekarangData.pickupAddress.trim() || !kirimSekarangData.dropoffAddress.trim()) {
+      setToast({ message: 'Lengkapi detail alamat penjemputan dan tujuan', type: 'warning' });
+      return;
+    }
+    if (!kirimSekarangData.serviceId) {
+      setToast({ message: 'Pilih jenis layanan terlebih dahulu', type: 'warning' });
+      return;
+    }
+    if (!kirimSekarangData.weight || parseFloat(kirimSekarangData.weight) <= 0) {
+      setToast({ message: 'Masukkan berat paket (minimal 0.1 kg)', type: 'warning' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const pickupCityLabel = selectedKirimSekarangPickup ? `${selectedKirimSekarangPickup.name}, ${selectedKirimSekarangPickup.province}` : kirimSekarangData.pickupLocation;
+      const dropoffCityLabel = selectedKirimSekarangDest ? `${selectedKirimSekarangDest.name}, ${selectedKirimSekarangDest.province}` : kirimSekarangData.dropoffLocation;
+      const pickupLocationCombined = `${kirimSekarangData.pickupAddress.trim()} • ${pickupCityLabel}`;
+      const dropoffLocationCombined = `${kirimSekarangData.dropoffAddress.trim()} • ${dropoffCityLabel}`;
+      const selectedService = services.find((service) => String(service.id) === kirimSekarangData.serviceId);
+
+      // Tentukan waktu slot berdasarkan jam saat ini
+      const now = new Date();
+      const currentHour = now.getHours();
+      let timeSlot = '13:00-17:00'; // Default siang
+      if (currentHour < 12) {
+        timeSlot = '09:00-12:00'; // Pagi
+      } else if (currentHour >= 17) {
+        timeSlot = '17:00-20:00'; // Sore/Malam
+      }
+
+      // Gunakan tanggal hari ini
+      const today = new Date().toISOString().split('T')[0];
+
+      const notesParts = [];
+      if (selectedService) {
+        notesParts.push(`Jenis Layanan: ${selectedService.name}${selectedService.estimasi ? ` (${selectedService.estimasi})` : ''}`);
+      }
+      if (kirimSekarangData.notes.trim()) {
+        notesParts.push(kirimSekarangData.notes.trim());
+      }
+
+      const payload = {
+        pickupLocation: pickupLocationCombined,
+        dropoffLocation: dropoffLocationCombined,
+        scheduledDate: today,
+        scheduleTimeSlot: timeSlot,
+        zone: selectedKirimSekarangDest?.zone || undefined,
+        // Add fields for zone-based price calculation (same as Cek Ongkir)
+        originCityId: selectedKirimSekarangPickup?.id,
+        destCityId: selectedKirimSekarangDest?.id,
+        serviceId: parseInt(kirimSekarangData.serviceId),
+        weight: parseFloat(kirimSekarangData.weight) || 1,
+        barang: kirimSekarangData.itemName ? {
+          itemName: kirimSekarangData.itemName,
+          scale: kirimSekarangData.weight
+        } : undefined,
+        notes: notesParts.length ? notesParts.join('\n') : undefined
+      };
+
+      const response = await DeliveryAPI.createKirimSekarang(payload);
+      const date = new Date(today).toLocaleDateString('id-ID', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      setToast({ 
+        message: `✅ Pengiriman berhasil dibuat!\n\n📋 Nomor Pesanan: #${response.data.id}\n📅 Tanggal: ${date}\n⏰ Waktu: ${timeSlot}\n\nKurir akan segera menjemput paket Anda.`, 
+        type: 'success' 
+      });
+      
+      // Reset form
+      setKirimSekarangData({
+        pickupLocation: '',
+        pickupAddress: '',
+        dropoffLocation: '',
+        dropoffAddress: '',
+        serviceId: '',
+        itemName: '',
+        weight: '',
+        notes: ''
+      });
+      setKirimSekarangPrice(null);
+      // Reset autocomplete
+      setKirimSekarangPickupSearch('');
+      setKirimSekarangDestSearch('');
+      setSelectedKirimSekarangPickup(null);
+      setSelectedKirimSekarangDest(null);
+    } catch (error) {
+      console.error('Error creating delivery:', error);
+      setToast({ 
+        message: 'Gagal membuat pengiriman: ' + (error.response?.data?.message || error.message), 
+        type: 'error' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Scheduled Delivery Handlers
   const handleScheduledSubmit = async () => {
     if (!user) {
@@ -471,6 +652,10 @@ export default function MTTransMultiTabForm() {
     }
     if (!scheduledFormData.serviceId) {
       setToast({ message: 'Pilih jenis layanan terlebih dahulu', type: 'warning' });
+      return;
+    }
+    if (!scheduledFormData.weight || parseFloat(scheduledFormData.weight) <= 0) {
+      setToast({ message: 'Masukkan berat paket (minimal 0.1 kg)', type: 'warning' });
       return;
     }
     if (!scheduledFormData.scheduledDate || !scheduledFormData.scheduleTimeSlot) {
@@ -500,6 +685,11 @@ export default function MTTransMultiTabForm() {
         scheduledDate: scheduledFormData.scheduledDate,
         scheduleTimeSlot: scheduledFormData.scheduleTimeSlot,
         zone: selectedScheduledDest?.zone || undefined, // Add zone from selected destination city
+        // Add fields for zone-based price calculation (same as Cek Ongkir)
+        originCityId: selectedScheduledPickup?.id,
+        destCityId: selectedScheduledDest?.id,
+        serviceId: parseInt(scheduledFormData.serviceId),
+        weight: parseFloat(scheduledFormData.weight) || 1,
         barang: scheduledFormData.itemName ? {
           itemName: scheduledFormData.itemName,
           scale: scheduledFormData.weight
@@ -1078,13 +1268,173 @@ export default function MTTransMultiTabForm() {
           </div>
         );
 
+      case 'kirim-sekarang':
+        return (
+          <div className="space-y-5">
+            <div className="border-l-4 border-red-500 pl-4 py-2 bg-red-50">
+              <h3 className="font-bold text-lg mb-1">Kirim Sekarang</h3>
+              <p className="text-sm text-gray-600">
+                Kirim paket Anda hari ini. Kurir akan segera menjemput setelah pesanan dikonfirmasi.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Alamat Penjemputan Autocomplete */}
+              <div className="relative" ref={kirimSekarangPickupRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Penjemputan</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#E00000] text-xl z-10">
+                    location_on
+                  </span>
+                  <input
+                    type="text"
+                    className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+                    placeholder="Ketik nama kota penjemputan..."
+                    value={kirimSekarangPickupSearch}
+                    onChange={(e) => handleKirimSekarangPickupSearch(e.target.value)}
+                    onFocus={() => setShowKirimSekarangPickupDropdown(true)}
+                  />
+                </div>
+                {showKirimSekarangPickupDropdown && kirimSekarangPickupSearch && filteredKirimSekarangPickupCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredKirimSekarangPickupCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectKirimSekarangPickup(city)}
+                        className="min-h-[44px] px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0 focus:outline-none focus:bg-gray-100"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Alamat Tujuan Autocomplete */}
+              <div className="relative" ref={kirimSekarangDestRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Tujuan</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl z-10">
+                    my_location
+                  </span>
+                  <input
+                    type="text"
+                    className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+                    placeholder="Ketik nama kota tujuan..."
+                    value={kirimSekarangDestSearch}
+                    onChange={(e) => handleKirimSekarangDestSearch(e.target.value)}
+                    onFocus={() => setShowKirimSekarangDestDropdown(true)}
+                  />
+                </div>
+                {showKirimSekarangDestDropdown && kirimSekarangDestSearch && filteredKirimSekarangDestCities.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredKirimSekarangDestCities.map((city) => (
+                      <div
+                        key={city.id}
+                        onClick={() => selectKirimSekarangDest(city)}
+                        className="min-h-[44px] px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0 focus:outline-none focus:bg-gray-100"
+                      >
+                        <div className="font-medium text-gray-900">{city.name}</div>
+                        <div className="text-xs text-gray-500">{city.province} • {city.type}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Detail Alamat Penjemputan</label>
+                <textarea
+                  value={kirimSekarangData.pickupAddress}
+                  onChange={(e) => setKirimSekarangData(prev => ({ ...prev, pickupAddress: e.target.value }))}
+                  className="w-full min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]"
+                  placeholder="Nama jalan, nomor rumah, patokan..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Detail Alamat Tujuan</label>
+                <textarea
+                  value={kirimSekarangData.dropoffAddress}
+                  onChange={(e) => setKirimSekarangData(prev => ({ ...prev, dropoffAddress: e.target.value }))}
+                  className="w-full min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]"
+                  placeholder="Nama jalan, nomor rumah, patokan..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Layanan</label>
+              <select
+                value={kirimSekarangData.serviceId}
+                onChange={(e) => setKirimSekarangData(prev => ({ ...prev, serviceId: e.target.value }))}
+                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]"
+              >
+                <option value="">Pilih jenis layanan</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} {service.estimasi ? `- ${service.estimasi}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nama Barang</label>
+                <input
+                  type="text"
+                  value={kirimSekarangData.itemName}
+                  onChange={(e) => setKirimSekarangData(prev => ({ ...prev, itemName: e.target.value }))}
+                  className="w-full min-h-[44px] h-12 px-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]"
+                  placeholder="Contoh: Dokumen, Pakaian"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Berat (kg)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={kirimSekarangData.weight}
+                  onChange={(e) => setKirimSekarangData(prev => ({ ...prev, weight: e.target.value }))}
+                  className="w-full min-h-[44px] h-12 px-4 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+              <textarea
+                value={kirimSekarangData.notes}
+                onChange={(e) => setKirimSekarangData(prev => ({ ...prev, notes: e.target.value }))}
+                className="w-full min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg focus:border-[#E00000] focus:ring-2 focus:ring-[#E00000]"
+                rows="3"
+                placeholder="Catatan untuk kurir..."
+              />
+            </div>
+
+            <button
+              onClick={(e) => { e.preventDefault(); handleKirimSekarangSubmit(); }}
+              disabled={loading}
+              className={`w-full min-h-[44px] bg-[#E00000] text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-offset-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading ? 'Memproses...' : 'Kirim Sekarang'}
+            </button>
+          </div>
+        );
+
       case 'jadwal':
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const minDate = tomorrow.toISOString().split('T')[0];
         
         return (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50">
               <h3 className="font-bold text-lg mb-1">Jadwal Pengiriman</h3>
               <p className="text-sm text-gray-600">
@@ -1270,7 +1620,7 @@ export default function MTTransMultiTabForm() {
 
       case 'multi-drop':
         return (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="border-l-4 border-green-500 pl-3 sm:pl-4 py-2 bg-green-50">
               <h3 className="font-bold text-base sm:text-lg mb-1">Multi Drop</h3>
               <p className="text-xs sm:text-sm text-gray-600">
@@ -1403,7 +1753,7 @@ export default function MTTransMultiTabForm() {
         const minDate2 = tomorrow2.toISOString().split('T')[0];
 
         return (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="border-l-4 border-orange-500 pl-3 sm:pl-4 py-2 bg-orange-50">
               <h3 className="font-bold text-base sm:text-lg mb-1">Paket Besar / Ekspedisi Lokal</h3>
               <p className="text-xs sm:text-sm text-gray-600">
@@ -1641,32 +1991,33 @@ export default function MTTransMultiTabForm() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Tab Navigation */}
           <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
-            <nav className="flex min-w-max sm:min-w-0">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
-                  className={`flex-shrink-0 px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-inset ${
-                    activeTab === tab.id
-                      ? 'bg-black text-white'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                  aria-label={tab.label}
-                  aria-selected={activeTab === tab.id}
-                  role="tab"
-                >
-                  <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
-                    <span className="material-symbols-outlined text-sm sm:text-base md:text-lg flex-shrink-0">{tab.icon}</span>
-                    <span className="whitespace-nowrap hidden xs:inline">{tab.id === 'ekspedisi' ? 'Paket Besar' : tab.label}</span>
-                    <span className="whitespace-nowrap xs:hidden">{tab.id === 'ekspedisi' ? 'Paket' : tab.label.length > 8 ? tab.label.substring(0, 6) + '...' : tab.label}</span>
-                  </div>
-                </button>
-              ))}
+            <nav className="flex min-w-max sm:min-w-0 sm:flex sm:justify-stretch">
+              {tabs.map((tab) => {
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabClick(tab.id)}
+                    className={`flex-shrink-0 sm:flex-1 px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#E00000] focus:ring-inset ${
+                      activeTab === tab.id
+                        ? 'bg-black text-white'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    aria-label={tab.label}
+                    aria-selected={activeTab === tab.id}
+                    role="tab"
+                  >
+                    <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
+                      <span className="material-symbols-outlined text-sm sm:text-base md:text-lg flex-shrink-0">{tab.icon}</span>
+                      <span className="whitespace-nowrap">{tab.id === 'ekspedisi' ? 'Paket Besar' : tab.label}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
           {/* Tab Content */}
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
+          <div className="p-4 sm:p-5 md:p-6 lg:p-8 overflow-x-hidden">
             <form onSubmit={handleSubmit} className="w-full overflow-x-hidden">
               {renderTabContent()}
             </form>

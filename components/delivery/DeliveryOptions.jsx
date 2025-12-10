@@ -14,7 +14,7 @@ const DeliveryOptions = () => {
     }
     
     if (option === "Pengiriman Instan") {
-      router.push('/cek-ongkir?tab=jadwal');
+      router.push('/cek-ongkir?tab=kirim-sekarang');
     } else if (option === "Jadwal Kirim") {
       router.push('/cek-ongkir?tab=jadwal');
     } else if (option === "Multi-drop") {

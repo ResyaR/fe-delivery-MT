@@ -275,8 +275,8 @@ export default function CartPage() {
     <div className="relative w-full bg-white text-[#1a1a1a] min-h-screen flex flex-col overflow-x-hidden">
       <MTTransFoodHeader />
 
-      <main className="pt-20 pb-8 sm:pb-16 flex-1 overflow-x-hidden">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl">
+      <main className="pt-20 pb-8 sm:pb-16 flex-1 overflow-x-hidden w-full max-w-full">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl w-full max-w-full overflow-x-hidden">
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => router.back()}
@@ -303,11 +303,11 @@ export default function CartPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full max-w-full overflow-x-hidden">
               {/* Cart Items */}
-              <div className="md:col-span-2 space-y-4 sm:space-y-6">
+              <div className="md:col-span-2 space-y-4 sm:space-y-6 w-full min-w-0 max-w-full overflow-x-hidden">
                 {/* Address Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 overflow-x-hidden">
                   <div className="flex items-center justify-between mb-4 gap-2">
                     <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#E00000] text-xl sm:text-2xl">location_on</span>
@@ -373,8 +373,8 @@ export default function CartPage() {
                       />
 
                       {/* Cart Items untuk restaurant ini */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between gap-2">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden w-full max-w-full">
+                  <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between gap-2 overflow-x-hidden">
                     <h2 className="text-base sm:text-lg font-bold text-gray-900 flex-1 min-w-0 break-words">
                             {group.restaurantName}
                     </h2>
@@ -457,10 +457,10 @@ export default function CartPage() {
                 })}
 
                 {/* Notes Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Catatan</h2>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 overflow-x-hidden w-full max-w-full">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4 break-words">Catatan</h2>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-full">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Catatan untuk Restaurant
@@ -499,23 +499,23 @@ export default function CartPage() {
               </div>
 
               {/* Order Summary */}
-              <div className="md:col-span-1">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 sticky top-20 lg:top-24 space-y-6">
-                  <h2 className="text-lg font-bold text-gray-900">Ringkasan Belanja</h2>
+              <div className="md:col-span-1 w-full min-w-0 max-w-full overflow-x-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 md:sticky md:top-20 lg:top-24 space-y-6 w-full max-w-full overflow-x-hidden">
+                  <h2 className="text-lg font-bold text-gray-900 break-words">Ringkasan Belanja</h2>
                   
                   {/* Promo Code */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="w-full overflow-x-hidden">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 break-words">
                       Kode Promo
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full">
                       <input
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                         placeholder="Masukan kode"
                         disabled={discount > 0}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] disabled:bg-gray-100"
+                        className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E00000] disabled:bg-gray-100"
                       />
                       {discount > 0 ? (
                         <button
@@ -546,29 +546,29 @@ export default function CartPage() {
                   </div>
 
                   {/* Price Summary */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-gray-700">
-                      <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} item)</span>
-                      <span className="font-semibold">Rp {subtotal.toLocaleString('id-ID')}</span>
+                  <div className="space-y-3 w-full overflow-x-hidden">
+                    <div className="flex justify-between text-gray-700 gap-2">
+                      <span className="break-words min-w-0">Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} item)</span>
+                      <span className="font-semibold whitespace-nowrap flex-shrink-0">Rp {subtotal.toLocaleString('id-ID')}</span>
                     </div>
-                    <div className="flex justify-between text-gray-700">
-                      <span>Biaya Pengantaran</span>
-                      <span className="font-semibold">Rp {deliveryFee.toLocaleString('id-ID')}</span>
+                    <div className="flex justify-between text-gray-700 gap-2">
+                      <span className="break-words min-w-0">Biaya Pengantaran</span>
+                      <span className="font-semibold whitespace-nowrap flex-shrink-0">Rp {deliveryFee.toLocaleString('id-ID')}</span>
                     </div>
                     {discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Diskon Promo</span>
-                        <span className="font-semibold">- Rp {discount.toLocaleString('id-ID')}</span>
+                      <div className="flex justify-between text-green-600 gap-2">
+                        <span className="break-words min-w-0">Diskon Promo</span>
+                        <span className="font-semibold whitespace-nowrap flex-shrink-0">- Rp {discount.toLocaleString('id-ID')}</span>
                       </div>
                     )}
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex justify-between text-gray-700 mb-3">
-                        <span>Biaya Aplikasi (10%)</span>
-                        <span className="font-semibold">Rp {appFee.toLocaleString('id-ID')}</span>
+                    <div className="border-t border-gray-200 pt-3 w-full overflow-x-hidden">
+                      <div className="flex justify-between text-gray-700 mb-3 gap-2">
+                        <span className="break-words min-w-0">Biaya Aplikasi (10%)</span>
+                        <span className="font-semibold whitespace-nowrap flex-shrink-0">Rp {appFee.toLocaleString('id-ID')}</span>
                       </div>
-                      <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
-                        <span>Total</span>
-                        <span className="text-[#E00000]">Rp {total.toLocaleString('id-ID')}</span>
+                      <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200 gap-2">
+                        <span className="break-words min-w-0">Total</span>
+                        <span className="text-[#E00000] whitespace-nowrap flex-shrink-0">Rp {total.toLocaleString('id-ID')}</span>
                       </div>
                     </div>
                   </div>

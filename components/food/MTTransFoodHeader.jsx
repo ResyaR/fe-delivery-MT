@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/authContext';
 import { useCart } from '@/lib/cartContext';
 import UserMenu from '../main/UserMenu';
@@ -9,6 +10,7 @@ import SearchBar from './SearchBar';
 
 export default function MTTransFoodHeader({ cartIconRef }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,11 +37,33 @@ export default function MTTransFoodHeader({ cartIconRef }) {
 
   const scrollToPromo = (e) => {
     e.preventDefault();
+    
+    // Jika sudah di halaman food, langsung scroll ke promo
+    if (pathname === '/food') {
     const promoSection = document.getElementById('food-promo');
     if (promoSection) {
       promoSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Jika di halaman lain, redirect ke food dengan hash untuk scroll ke promo
+      router.push('/food#promo');
     }
   };
+
+  // Handle scroll ke promo setelah redirect dari halaman lain
+  useEffect(() => {
+    if (pathname === '/food' && window.location.hash === '#promo') {
+      // Delay sedikit untuk memastikan halaman sudah ter-render
+      setTimeout(() => {
+        const promoSection = document.getElementById('food-promo');
+        if (promoSection) {
+          promoSection.scrollIntoView({ behavior: 'smooth' });
+          // Hapus hash dari URL setelah scroll
+          window.history.replaceState(null, '', '/food');
+        }
+      }, 300);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,12 +97,32 @@ export default function MTTransFoodHeader({ cartIconRef }) {
         </div>
         
         <nav className="hidden lg:flex items-center justify-center gap-6 xl:gap-8 text-sm lg:text-base font-medium flex-1 px-4 lg:px-8" role="navigation" aria-label="Navigasi utama">
-          <a className="text-[#E00000] font-bold focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1" href="/food" aria-current="page">Home</a>
-          <a className="hover:text-[#E00000] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1" onClick={() => router.push('/food/all')}>Restaurants</a>
+          <a 
+            className={`${pathname === '/' ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1`} 
+            onClick={() => router.push('/')}
+          >
+            Home
+          </a>
+          <a 
+            className={`${pathname === '/food/all' || pathname.startsWith('/food/restaurants') ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1`} 
+            onClick={() => router.push('/food/all')}
+          >
+            Restaurants
+          </a>
           {user && (
-            <a className="hover:text-[#E00000] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1" onClick={() => router.push('/orders')}>My Orders</a>
+            <a 
+              className={`${pathname === '/orders' ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1`} 
+              onClick={() => router.push('/orders')}
+            >
+              History
+            </a>
           )}
-          <a className="hover:text-[#E00000] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1" onClick={scrollToPromo}>Promo</a>
+          <a 
+            className={`${pathname === '/food' && !pathname.startsWith('/food/') ? 'text-[#E00000] font-bold' : 'hover:text-[#E00000]'} transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded px-2 py-1`} 
+            onClick={scrollToPromo}
+          >
+            Promo
+          </a>
         </nav>
 
         {/* Search Bar (Desktop) */}
@@ -114,7 +158,7 @@ export default function MTTransFoodHeader({ cartIconRef }) {
 
           {user ? (
             <div className="hidden md:block">
-              <UserMenu />
+            <UserMenu />
             </div>
           ) : (
             <button 
@@ -127,16 +171,52 @@ export default function MTTransFoodHeader({ cartIconRef }) {
           )}
           
           {/* Mobile menu button */}
-          <button 
-            className="md:hidden min-w-[44px] min-h-[44px] p-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded"
+          <motion.button 
+            className="md:hidden min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] p-1.5 sm:p-2 focus:outline-none focus:ring-2 focus:ring-[#E00000] rounded flex-shrink-0"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? "Tutup menu" : "Buka menu"}
             aria-expanded={isMenuOpen}
+            whileTap={{ scale: 0.95 }}
+            animate={{ rotate: isMenuOpen ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+            <motion.svg 
+              className="w-5 h-5 sm:w-6 sm:h-6" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              animate={isMenuOpen ? {
+                pathLength: 1,
+              } : {
+                pathLength: 1,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {isMenuOpen ? (
+                <motion.path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M6 18L18 6M6 6l12 12"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  exit={{ pathLength: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              ) : (
+                <motion.path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 6h16M4 12h16M4 18h16"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  exit={{ pathLength: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+            </motion.svg>
+          </motion.button>
         </div>
       </div>
       
@@ -148,12 +228,31 @@ export default function MTTransFoodHeader({ cartIconRef }) {
       )}
       
       {/* Mobile menu */}
+      <AnimatePresence>
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
-          <div className="px-4 py-3 space-y-1">
+          <motion.div 
+            className="md:hidden bg-white border-t border-gray-200 shadow-lg overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <motion.div 
+              className="px-4 py-3 space-y-1"
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              exit={{ y: -20 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
             {/* Profile Section - Di atas sendiri dengan dropdown */}
             {user ? (
-              <div className="pb-3 mb-3 border-b border-gray-200" ref={profileDropdownRef}>
+              <motion.div 
+                className="pb-3 mb-3 border-b border-gray-200" 
+                ref={profileDropdownRef}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.05 }}
+              >
                 <button 
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   className="w-full text-left py-3 text-gray-700 hover:text-[#E00000] transition-colors flex items-center justify-between"
@@ -177,85 +276,150 @@ export default function MTTransFoodHeader({ cartIconRef }) {
                     {isProfileDropdownOpen ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
-                {isProfileDropdownOpen && (
-                  <div className="pl-4 pb-2 space-y-1">
-                    <button 
-                      onClick={() => {
-                        router.push('/profile');
-                        setIsMenuOpen(false);
-                        setIsProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
+                <AnimatePresence>
+                  {isProfileDropdownOpen && (
+                    <motion.div 
+                      className="pl-4 pb-2 space-y-1"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
                     >
-                      <span className="material-symbols-outlined text-base">person</span>
-                      <span>Profile</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        router.push('/orders');
-                        setIsMenuOpen(false);
-                        setIsProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-base">restaurant</span>
-                      <span>Pesanan Makanan</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        router.push('/deliveries');
-                        setIsMenuOpen(false);
-                        setIsProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-base">local_shipping</span>
-                      <span>Riwayat Pengiriman</span>
-                    </button>
-                    <button 
-                      onClick={async () => {
-                        try {
-                          await logout();
+                      <motion.button 
+                        onClick={() => {
+                          router.push('/profile');
                           setIsMenuOpen(false);
                           setIsProfileDropdownOpen(false);
-                          router.push('/food');
-                        } catch (error) {
-                          console.error('Logout failed:', error);
+                        }}
+                        className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="material-symbols-outlined text-base">person</span>
+                        <span>Profile</span>
+                      </motion.button>
+                      <motion.button 
+                        onClick={() => {
+                          router.push('/orders');
                           setIsMenuOpen(false);
                           setIsProfileDropdownOpen(false);
-                        }
-                      }}
-                      className="w-full text-left py-2 text-red-600 hover:text-red-700 cursor-pointer flex items-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-base">logout</span>
-                      <span>Logout</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+                        }}
+                        className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="material-symbols-outlined text-base">restaurant</span>
+                        <span>Pesanan Makanan</span>
+                      </motion.button>
+                      <motion.button 
+                        onClick={() => {
+                          router.push('/deliveries');
+                          setIsMenuOpen(false);
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className="w-full text-left py-2 text-gray-600 hover:text-[#E00000] cursor-pointer flex items-center gap-2"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.15 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="material-symbols-outlined text-base">local_shipping</span>
+                        <span>Riwayat Pengiriman</span>
+                      </motion.button>
+                      <motion.button 
+                        onClick={async () => {
+                          try {
+                            await logout();
+                            setIsMenuOpen(false);
+                            setIsProfileDropdownOpen(false);
+                            router.push('/food');
+                          } catch (error) {
+                            console.error('Logout failed:', error);
+                            setIsMenuOpen(false);
+                            setIsProfileDropdownOpen(false);
+                          }
+                        }}
+                        className="w-full text-left py-2 text-red-600 hover:text-red-700 cursor-pointer flex items-center gap-2"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="material-symbols-outlined text-base">logout</span>
+                        <span>Logout</span>
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ) : (
-              <div className="pb-3 mb-3 border-b border-gray-200">
-                <button 
+              <motion.div 
+                className="pb-3 mb-3 border-b border-gray-200"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.05 }}
+              >
+                <motion.button 
                   onClick={() => {
                     handleSignInClick();
                     setIsMenuOpen(false);
                   }}
                   className="w-full text-left py-2 text-gray-700 hover:text-[#E00000] transition-colors flex items-center gap-2"
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <span className="material-symbols-outlined text-lg">login</span>
                   <span>Sign In</span>
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
             
             {/* Menu Navigation */}
-            <a className="block py-2 text-[#E00000] font-bold flex items-center gap-2" href="/food">
+            <motion.a 
+              className={`block py-2 flex items-center gap-2 cursor-pointer ${pathname === '/' ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} transition-colors`}
+              onClick={() => router.push('/')}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <span className="material-symbols-outlined text-lg">home</span>
               <span>Home</span>
-            </a>
-            <a className="block py-2 text-gray-700 hover:text-[#E00000] transition-colors cursor-pointer" onClick={() => router.push('/food/all')}>Restaurants</a>
-            <a className="block py-2 text-gray-700 hover:text-[#E00000] transition-colors cursor-pointer" onClick={scrollToPromo}>Promo</a>
-            <a className="block py-2 text-gray-700 hover:text-[#E00000] transition-colors cursor-pointer flex items-center gap-2" onClick={handleCartClick}>
+            </motion.a>
+            <motion.a 
+              className={`block py-2 flex items-center gap-2 cursor-pointer ${pathname === '/food/all' || pathname.startsWith('/food/restaurants') ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} transition-colors`}
+              onClick={() => router.push('/food/all')}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.15 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="material-symbols-outlined text-lg">restaurant</span>
+              <span>Restaurants</span>
+            </motion.a>
+            <motion.a 
+              className={`block py-2 flex items-center gap-2 cursor-pointer ${pathname === '/food' && !pathname.startsWith('/food/') ? 'text-[#E00000] font-bold' : 'text-gray-700 hover:text-[#E00000]'} transition-colors`}
+              onClick={scrollToPromo}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="material-symbols-outlined text-lg">local_offer</span>
+              <span>Promo</span>
+            </motion.a>
+            <motion.a 
+              className="block py-2 text-gray-700 hover:text-[#E00000] transition-colors cursor-pointer flex items-center gap-2" 
+              onClick={handleCartClick}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.25 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <span className="material-symbols-outlined text-lg">shopping_cart</span>
               <span>Cart</span>
               {totalItems > 0 && (
@@ -263,10 +427,11 @@ export default function MTTransFoodHeader({ cartIconRef }) {
                   {totalItems}
                 </span>
               )}
-            </a>
-          </div>
-        </div>
-      )}
+            </motion.a>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

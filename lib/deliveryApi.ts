@@ -25,6 +25,28 @@ export interface CreateScheduledDeliveryDto {
   dropoffLocation: string;
   scheduledDate: string; // YYYY-MM-DD
   scheduleTimeSlot: string;
+  zone?: number;
+  originCityId?: number;
+  destCityId?: number;
+  serviceId?: number;
+  weight?: number;
+  barang?: {
+    itemName: string;
+    scale: string;
+  };
+  notes?: string;
+}
+
+export interface CreateKirimSekarangDto {
+  pickupLocation: string;
+  dropoffLocation: string;
+  scheduledDate: string; // YYYY-MM-DD
+  scheduleTimeSlot: string;
+  zone?: number;
+  originCityId?: number;
+  destCityId?: number;
+  serviceId?: number;
+  weight?: number;
   barang?: {
     itemName: string;
     scale: string;
@@ -57,6 +79,12 @@ export const DeliveryAPI = {
   // Create Scheduled Delivery
   async createScheduledDelivery(data: CreateScheduledDeliveryDto) {
     const response = await api.post('/delivery/scheduled', data);
+    return response.data;
+  },
+
+  // Create Kirim Sekarang Delivery
+  async createKirimSekarang(data: CreateKirimSekarangDto) {
+    const response = await api.post('/delivery/kirim-sekarang', data);
     return response.data;
   },
 

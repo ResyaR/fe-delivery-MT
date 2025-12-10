@@ -23,7 +23,7 @@ export default function MTTransHero() {
   };
 
   const handlePengirimanInstan = () => {
-    router.push('/cek-ongkir?tab=jadwal');
+    router.push('/cek-ongkir?tab=kirim-sekarang');
   };
 
   return (
