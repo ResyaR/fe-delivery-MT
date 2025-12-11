@@ -8,6 +8,8 @@ import { ToastProvider } from '@/components/common/ToastProvider'
 import AuthGuard from '@/components/auth/AuthGuard'
 import TokenRefreshIndicator from '@/components/common/TokenRefreshIndicator'
 import InstallPrompt from '@/components/common/InstallPrompt'
+import OfflineIndicator from '@/components/common/OfflineIndicator'
+import IndexedDBInit from '@/components/common/IndexedDBInit'
 import "./globals.css"
 
 export const metadata = {
@@ -45,6 +47,8 @@ export default function RootLayout({ children }) {
               <ToastProvider>
                 <AuthGuard>
                   <div className="relative min-h-screen bg-white overflow-x-hidden w-full">
+                    <IndexedDBInit />
+                    <OfflineIndicator />
                     {children}
                     <Analytics />
                     <TokenRefreshIndicator />

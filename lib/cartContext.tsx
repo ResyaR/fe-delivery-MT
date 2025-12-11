@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './authContext';
+import indexedDB from './indexedDB';
 
 interface CartItem {
   menuId: number;
@@ -52,6 +53,64 @@ const loadCartFromStorage = (): CartItem[] => {
   return [];
 };
 
+// Helper function to save cart to IndexedDB (backup for offline)
+const saveCartToIndexedDB = async (cart: CartItem[]) => {
+  try {
+    // Initialize IndexedDB if not already done
+    await indexedDB.init();
+    
+    // Save cart items to IndexedDB
+    if (cart.length > 0) {
+      const cartItems = cart.map((item, index) => ({
+        id: `cart-item-${item.menuId}-${Date.now()}-${index}`,
+        cartId: 'main-cart',
+        menuId: item.menuId,
+        quantity: item.quantity,
+        price: item.price,
+        menuName: item.menuName,
+        image: item.image,
+        restaurantId: item.restaurantId,
+        restaurantName: item.restaurantName,
+      }));
+      
+      await indexedDB.cacheCartItems(cartItems);
+      await indexedDB.cacheCart({
+        id: 'main-cart',
+        restaurantId: cart[0]?.restaurantId || null,
+        items: cartItems,
+      });
+    } else {
+      await indexedDB.clearCart();
+    }
+  } catch (error) {
+    console.warn('Error saving cart to IndexedDB:', error);
+    // Don't throw, just log warning - localStorage is primary
+  }
+};
+
+// Helper function to load cart from IndexedDB (fallback)
+const loadCartFromIndexedDB = async (): Promise<CartItem[]> => {
+  try {
+    await indexedDB.init();
+    const cachedCart = await indexedDB.getCachedCart();
+    
+    if (cachedCart && cachedCart.items) {
+      return cachedCart.items.map((item: any) => ({
+        menuId: item.menuId,
+        menuName: item.menuName,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        restaurantId: item.restaurantId,
+        restaurantName: item.restaurantName,
+      }));
+    }
+  } catch (error) {
+    console.warn('Error loading cart from IndexedDB:', error);
+  }
+  return [];
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,21 +119,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
 
   // Load cart from localStorage on mount (only once, before auth check)
+  // Fallback to IndexedDB if localStorage is empty
   useEffect(() => {
     if (!isInitialized) {
       const savedCart = loadCartFromStorage();
-      if (savedCart && Array.isArray(savedCart)) {
+      if (savedCart && Array.isArray(savedCart) && savedCart.length > 0) {
         setCart(savedCart);
+        setIsInitialized(true);
+      } else {
+        // Try IndexedDB as fallback
+        loadCartFromIndexedDB().then((cachedCart) => {
+          if (cachedCart && cachedCart.length > 0) {
+            setCart(cachedCart);
+            saveCartToStorage(cachedCart); // Sync back to localStorage
+          }
+          setIsInitialized(true);
+        }).catch(() => {
+          setIsInitialized(true);
+        });
       }
-      setIsInitialized(true);
     }
   }, [isInitialized]);
 
-  // Save cart to localStorage whenever cart changes (after initialization)
+  // Save cart to localStorage and IndexedDB whenever cart changes (after initialization)
   useEffect(() => {
     if (isInitialized) {
       if (cart.length > 0) {
         saveCartToStorage(cart);
+        // Also save to IndexedDB for offline backup
+        saveCartToIndexedDB(cart).catch(() => {
+          // Silently fail, localStorage is primary
+        });
       } else {
         // Keep cart in localStorage even if empty, so we know it was initialized
         // Only remove if explicitly cleared
@@ -134,8 +209,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearCart = async () => {
-      setCart([]);
+    setCart([]);
     localStorage.removeItem(CART_STORAGE_KEY);
+    // Also clear IndexedDB
+    try {
+      await indexedDB.clearCart();
+    } catch (error) {
+      console.warn('Error clearing cart from IndexedDB:', error);
+    }
     return Promise.resolve();
   };
 
